@@ -34,7 +34,7 @@ public class SpeechRecognition {
     private static final int SAMPLE_RATE = 44100;
     private static final int BUFFER_SIZE = 1024;
     private static final int NUM_MFCC_COEFFICIENTS = 13;
-    private static final int NUM_RECORDINGS = 5;
+    private static final int NUM_RECORDINGS = 150;
     private static List<String> words = new ArrayList<>();
     private static MultiLayerNetwork model;
     private static final String TRAINING_DATA_FILE = "training_data.csv";
@@ -52,7 +52,7 @@ public class SpeechRecognition {
             }
 
             if (getUserConfirmation(scanner, "Czy chcesz utworzyć model DNN?")) {
-                trainAndSaveModel();
+              //  trainAndSaveModel();
             }
 
             //recognizeWordsFromAudio();
