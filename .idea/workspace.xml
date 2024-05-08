@@ -4,10 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2b8b1008-3418-4230-a8a2-ee0b2892e14a" name="Changes" comment="Naprawa błędów związanych z załadowanie projektu">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/basics/SpeechRecognition.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/example/basics/SpeechRecognition.java" afterDir="false" />
+    <list default="true" id="2b8b1008-3418-4230-a8a2-ee0b2892e14a" name="Changes" comment="Dane trenigowe : hi , how">
+      <change beforePath="$PROJECT_DIR$/target/classes/com/example/basics/Main.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/example/basics/SpeechRecognition.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/example/basics/SpeechRecognition.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/training_data.csv" beforeDir="false" afterPath="$PROJECT_DIR$/training_data.csv" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/words_list.txt" beforeDir="false" afterPath="$PROJECT_DIR$/words_list.txt" afterDir="false" />
     </list>
@@ -109,7 +108,15 @@
       <option name="project" value="LOCAL" />
       <updated>1715174756281</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Dane trenigowe : hi , how">
+      <option name="closed" value="true" />
+      <created>1715197766612</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1715197766612</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="UnknownFeatures">
@@ -117,6 +124,7 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Naprawa błędów związanych z załadowanie projektu" />
-    <option name="LAST_COMMIT_MESSAGE" value="Naprawa błędów związanych z załadowanie projektu" />
+    <MESSAGE value="Dane trenigowe : hi , how" />
+    <option name="LAST_COMMIT_MESSAGE" value="Dane trenigowe : hi , how" />
   </component>
 </project>
