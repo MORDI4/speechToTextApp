@@ -4,7 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2b8b1008-3418-4230-a8a2-ee0b2892e14a" name="Changes" comment="Naprawa błędów związanych z załadowanie projektu" />
+    <list default="true" id="2b8b1008-3418-4230-a8a2-ee0b2892e14a" name="Changes" comment="Naprawa błędów związanych z załadowanie projektu">
+      <change afterPath="$PROJECT_DIR$/words_list.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/speech_model.zip" beforeDir="false" afterPath="$PROJECT_DIR$/speech_model.zip" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/basics/SpeechRecognition.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/example/basics/SpeechRecognition.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/example/basics/SpeechRecognition.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/example/basics/SpeechRecognition.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/training_data.csv" beforeDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -16,6 +23,9 @@
         <option value="Class" />
       </list>
     </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
@@ -39,7 +49,9 @@
   &quot;associatedIndex&quot;: 1
 }</component>
   <component name="ProjectId" id="2dElImdSnrIiuazE0RGcgW50B6U" />
-  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -48,6 +60,7 @@
   "keyToString": {
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "ignore.virus.scanning.warn.message": "true",
     "last_opened_file_path": "C:/Users/Michal_Mordarski/Downloads/jahmm-0.7.0.jar",
     "project.structure.last.edited": "Project",
     "project.structure.proportion": "0.15",
@@ -89,9 +102,22 @@
       <option name="presentableId" value="Default" />
       <updated>1709581042963</updated>
     </task>
+    <task id="LOCAL-00001" summary="Naprawa błędów związanych z załadowanie projektu">
+      <option name="closed" value="true" />
+      <created>1715174756281</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1715174756281</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="UnknownFeatures">
     <option featureType="dependencySupport" implementationName="java:org.projectlombok:lombok" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Naprawa błędów związanych z załadowanie projektu" />
+    <option name="LAST_COMMIT_MESSAGE" value="Naprawa błędów związanych z załadowanie projektu" />
   </component>
 </project>

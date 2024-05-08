@@ -34,10 +34,11 @@ public class SpeechRecognition {
     private static final int SAMPLE_RATE = 44100;
     private static final int BUFFER_SIZE = 1024;
     private static final int NUM_MFCC_COEFFICIENTS = 13;
-    private static final int NUM_RECORDINGS = 100;
+    private static final int NUM_RECORDINGS = 5;
     private static List<String> words = new ArrayList<>();
     private static MultiLayerNetwork model;
     private static final String TRAINING_DATA_FILE = "training_data.csv";
+    private static final String WORDS_LIST_FILE = "words_list.txt";
 
 
 
@@ -45,8 +46,7 @@ public class SpeechRecognition {
 
         System.out.println("Starting main method...");
         try (Scanner scanner = new Scanner(System.in)) {
-            loadWordsFromTrainingDataFile();
-
+            loadWordsFromListFile();
             if (getUserConfirmation(scanner, "Czy chcesz dodać dane treningowe?")) {
                 addTrainingData(scanner);
             }
@@ -55,7 +55,7 @@ public class SpeechRecognition {
                 trainAndSaveModel();
             }
 
-            recognizeWordsFromAudio();
+            //recognizeWordsFromAudio();
         } catch (Exception e) {
             System.err.println("An error occurred: " + e.getMessage());
             e.printStackTrace();
@@ -105,8 +105,20 @@ public class SpeechRecognition {
         }
     }
 
+    private static void loadWordsFromListFile() {
+        try (BufferedReader br = new BufferedReader(new FileReader(WORDS_LIST_FILE))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                words.add(line.trim());
+            }
+        } catch (IOException e) {
+            System.err.println("Error loading words from file: " + e.getMessage());
+        }
+    }
+
     private static void addTrainingData(Scanner scanner) throws IOException, LineUnavailableException {
         Set<String> uniqueWords = new HashSet<>(words);
+        System.out.println("Dostępne słowa: " + uniqueWords);
         for (String word : uniqueWords) {
             List<double[]> mfccSamples = recordWordSamples(scanner, word);
             for (double[] mfcc : mfccSamples) {
@@ -114,9 +126,6 @@ public class SpeechRecognition {
             }
         }
     }
-
-
-
 
     private static void saveTrainingData(String word, double[] mfccFeatures) throws IOException {
         try (FileWriter fw = new FileWriter(TRAINING_DATA_FILE, true);
@@ -177,6 +186,7 @@ public class SpeechRecognition {
 
 
     private static MultiLayerNetwork trainModel() throws Exception {
+        loadWordsFromListFile();
         if (words.isEmpty()) {
             System.out.println("No words loaded. Cannot train model.");
             return null;
@@ -388,7 +398,7 @@ public class SpeechRecognition {
         if (!AudioSystem.isLineSupported(info)) {
             throw new LineUnavailableException("Audio line not supported.");
         }
-
+        System.out.println("Rozpoczęto nagrywanie...");
         byte[] audioData = null;
         try (TargetDataLine line = (TargetDataLine) AudioSystem.getLine(info)) {
             line.open(format);
@@ -397,10 +407,17 @@ public class SpeechRecognition {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             byte[] data = new byte[1024];
             int numBytesRead;
-            while (line.isOpen() && !Thread.currentThread().isInterrupted()) {
+            boolean recording = true; // Dodajemy zmienną reprezentującą stan nagrywania
+
+            while (recording && !Thread.currentThread().isInterrupted()) {
                 numBytesRead = line.read(data, 0, data.length);
                 if (numBytesRead > 0) {
                     out.write(data, 0, numBytesRead);
+                }
+                // Sprawdź, czy użytkownik nacisnął Enter, aby zakończyć nagrywanie
+                if (System.in.available() > 0 && System.in.read() == '\n') {
+                    recording = false;
+                    System.out.println("Zakończono nagrywanie.");
                 }
             }
             audioData = out.toByteArray();
@@ -413,6 +430,7 @@ public class SpeechRecognition {
         double[] normalizedFilteredSamples = filterAndNormalize(samples);
         return convertDoubleSamplesToBytes(normalizedFilteredSamples);
     }
+
 
 
     private static double[] filterAndNormalize(double[] samples) {
