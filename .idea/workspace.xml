@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2b8b1008-3418-4230-a8a2-ee0b2892e14a" name="Changes" comment="Dane treningowe : yes,no">
+    <list default="true" id="2b8b1008-3418-4230-a8a2-ee0b2892e14a" name="Changes" comment="Dane treningowe : goodbye&#10;                  thank &#10;                  please">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/training_data.csv" beforeDir="false" afterPath="$PROJECT_DIR$/training_data.csv" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/words_list.txt" beforeDir="false" afterPath="$PROJECT_DIR$/words_list.txt" afterDir="false" />
@@ -163,7 +163,15 @@
       <option name="project" value="LOCAL" />
       <updated>1715418193745</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="Dane treningowe : goodbye&#10;                  thank &#10;                  please">
+      <option name="closed" value="true" />
+      <created>1715439516070</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1715439516070</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="UnknownFeatures">
@@ -178,6 +186,7 @@
     <MESSAGE value="Dane treningowe : apple , be" />
     <MESSAGE value="Dane treningowe : bank , bar" />
     <MESSAGE value="Dane treningowe : yes,no" />
-    <option name="LAST_COMMIT_MESSAGE" value="Dane treningowe : yes,no" />
+    <MESSAGE value="Dane treningowe : goodbye&#10;                  thank &#10;                  please" />
+    <option name="LAST_COMMIT_MESSAGE" value="Dane treningowe : goodbye&#10;                  thank &#10;                  please" />
   </component>
 </project>
