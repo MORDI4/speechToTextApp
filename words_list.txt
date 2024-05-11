@@ -1,2 +1,2 @@
-bank
-bar
+yes
+no
