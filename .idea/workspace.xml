@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2b8b1008-3418-4230-a8a2-ee0b2892e14a" name="Changes" comment="Dane treningowe : hate,happy,sad">
+    <list default="true" id="2b8b1008-3418-4230-a8a2-ee0b2892e14a" name="Changes" comment="Dane treningowe : angry ,tired,hot">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/training_data.csv" beforeDir="false" afterPath="$PROJECT_DIR$/training_data.csv" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/words_list.txt" beforeDir="false" afterPath="$PROJECT_DIR$/words_list.txt" afterDir="false" />
@@ -259,7 +259,15 @@
       <option name="project" value="LOCAL" />
       <updated>1715622566717</updated>
     </task>
-    <option name="localTasksCounter" value="21" />
+    <task id="LOCAL-00021" summary="Dane treningowe : angry ,tired,hot">
+      <option name="closed" value="true" />
+      <created>1715624043212</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1715624043212</updated>
+    </task>
+    <option name="localTasksCounter" value="22" />
     <servers />
   </component>
   <component name="UnknownFeatures">
@@ -286,6 +294,7 @@
     <MESSAGE value="Dane treningowe : write ,speak ,listen" />
     <MESSAGE value="Dane treningowe : listen,understand,love" />
     <MESSAGE value="Dane treningowe : hate,happy,sad" />
-    <option name="LAST_COMMIT_MESSAGE" value="Dane treningowe : hate,happy,sad" />
+    <MESSAGE value="Dane treningowe : angry ,tired,hot" />
+    <option name="LAST_COMMIT_MESSAGE" value="Dane treningowe : angry ,tired,hot" />
   </component>
 </project>
