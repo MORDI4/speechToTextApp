@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2b8b1008-3418-4230-a8a2-ee0b2892e14a" name="Changes" comment="Dane treningowe : ja ,ty ,on">
+    <list default="true" id="2b8b1008-3418-4230-a8a2-ee0b2892e14a" name="Changes" comment="Dane treningowe : ona,to,my">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/training_data.csv" beforeDir="false" afterPath="$PROJECT_DIR$/training_data.csv" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/words_list.txt" beforeDir="false" afterPath="$PROJECT_DIR$/words_list.txt" afterDir="false" />
@@ -307,14 +307,21 @@
       <option name="project" value="LOCAL" />
       <updated>1715716975926</updated>
     </task>
-    <option name="localTasksCounter" value="27" />
+    <task id="LOCAL-00027" summary="Dane treningowe : ona,to,my">
+      <option name="closed" value="true" />
+      <created>1715786959915</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1715786959916</updated>
+    </task>
+    <option name="localTasksCounter" value="28" />
     <servers />
   </component>
   <component name="UnknownFeatures">
     <option featureType="dependencySupport" implementationName="java:org.projectlombok:lombok" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Dane trenigowe : hi , how" />
     <MESSAGE value="Dane treningowe : are" />
     <MESSAGE value="Dane treningowe : you" />
     <MESSAGE value="Dane treningowe : animal" />
@@ -339,6 +346,7 @@
     <MESSAGE value="Dane treningowe : nie,do widzenia ,tak" />
     <MESSAGE value="Dane treningowe : przepraszam,dziękuję, proszę" />
     <MESSAGE value="Dane treningowe : ja ,ty ,on" />
-    <option name="LAST_COMMIT_MESSAGE" value="Dane treningowe : ja ,ty ,on" />
+    <MESSAGE value="Dane treningowe : ona,to,my" />
+    <option name="LAST_COMMIT_MESSAGE" value="Dane treningowe : ona,to,my" />
   </component>
 </project>
