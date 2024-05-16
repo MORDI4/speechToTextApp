@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2b8b1008-3418-4230-a8a2-ee0b2892e14a" name="Changes" comment="Dane treningowe : dlaczego ,jak , jeść">
+    <list default="true" id="2b8b1008-3418-4230-a8a2-ee0b2892e14a" name="Changes" comment="Dane treningowe : pić, spać ,chodzić">
       <change beforePath="$PROJECT_DIR$/words_list.txt" beforeDir="false" afterPath="$PROJECT_DIR$/words_list.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -345,14 +345,21 @@
       <option name="project" value="LOCAL" />
       <updated>1715877623278</updated>
     </task>
-    <option name="localTasksCounter" value="32" />
+    <task id="LOCAL-00032" summary="Dane treningowe : pić, spać ,chodzić">
+      <option name="closed" value="true" />
+      <created>1715878468830</created>
+      <option name="number" value="00032" />
+      <option name="presentableId" value="LOCAL-00032" />
+      <option name="project" value="LOCAL" />
+      <updated>1715878468830</updated>
+    </task>
+    <option name="localTasksCounter" value="33" />
     <servers />
   </component>
   <component name="UnknownFeatures">
     <option featureType="dependencySupport" implementationName="java:org.projectlombok:lombok" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Dane treningowe : bank , bar" />
     <MESSAGE value="Dane treningowe : yes,no" />
     <MESSAGE value="Dane treningowe : goodbye&#10;                  thank &#10;                  please" />
     <MESSAGE value="Dane treningowe : sorry ,I, he" />
@@ -377,6 +384,7 @@
     <MESSAGE value="Dane treningowe : tutaj, tam , co" />
     <MESSAGE value="Dane treningowe : kto, gdzie, kiedy" />
     <MESSAGE value="Dane treningowe : dlaczego ,jak , jeść" />
-    <option name="LAST_COMMIT_MESSAGE" value="Dane treningowe : dlaczego ,jak , jeść" />
+    <MESSAGE value="Dane treningowe : pić, spać ,chodzić" />
+    <option name="LAST_COMMIT_MESSAGE" value="Dane treningowe : pić, spać ,chodzić" />
   </component>
 </project>
