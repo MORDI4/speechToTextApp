@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2b8b1008-3418-4230-a8a2-ee0b2892e14a" name="Changes" comment="Dane treningowe : pić, spać ,chodzić">
+    <list default="true" id="2b8b1008-3418-4230-a8a2-ee0b2892e14a" name="Changes" comment="Dane treningowe : biegać, skakać ,siedzieć">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/training_data.csv" beforeDir="false" afterPath="$PROJECT_DIR$/training_data.csv" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/words_list.txt" beforeDir="false" afterPath="$PROJECT_DIR$/words_list.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -353,14 +355,21 @@
       <option name="project" value="LOCAL" />
       <updated>1715878468830</updated>
     </task>
-    <option name="localTasksCounter" value="33" />
+    <task id="LOCAL-00033" summary="Dane treningowe : biegać, skakać ,siedzieć">
+      <option name="closed" value="true" />
+      <created>1715879306920</created>
+      <option name="number" value="00033" />
+      <option name="presentableId" value="LOCAL-00033" />
+      <option name="project" value="LOCAL" />
+      <updated>1715879306920</updated>
+    </task>
+    <option name="localTasksCounter" value="34" />
     <servers />
   </component>
   <component name="UnknownFeatures">
     <option featureType="dependencySupport" implementationName="java:org.projectlombok:lombok" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Dane treningowe : yes,no" />
     <MESSAGE value="Dane treningowe : goodbye&#10;                  thank &#10;                  please" />
     <MESSAGE value="Dane treningowe : sorry ,I, he" />
     <MESSAGE value="Dane treningowe : she,it,we" />
@@ -385,6 +394,7 @@
     <MESSAGE value="Dane treningowe : kto, gdzie, kiedy" />
     <MESSAGE value="Dane treningowe : dlaczego ,jak , jeść" />
     <MESSAGE value="Dane treningowe : pić, spać ,chodzić" />
-    <option name="LAST_COMMIT_MESSAGE" value="Dane treningowe : pić, spać ,chodzić" />
+    <MESSAGE value="Dane treningowe : biegać, skakać ,siedzieć" />
+    <option name="LAST_COMMIT_MESSAGE" value="Dane treningowe : biegać, skakać ,siedzieć" />
   </component>
 </project>
