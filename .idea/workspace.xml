@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2b8b1008-3418-4230-a8a2-ee0b2892e14a" name="Changes" comment="Dane treningowe : zmęczony,gorący, zimny,  szczęśliwy">
+    <list default="true" id="2b8b1008-3418-4230-a8a2-ee0b2892e14a" name="Changes" comment="Dane treningowe : duży, mały, dobry,zwierzę">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/words_list.txt" beforeDir="false" afterPath="$PROJECT_DIR$/words_list.txt" afterDir="false" />
     </list>
@@ -394,14 +394,21 @@
       <option name="project" value="LOCAL" />
       <updated>1715962389315</updated>
     </task>
-    <option name="localTasksCounter" value="38" />
+    <task id="LOCAL-00038" summary="Dane treningowe : duży, mały, dobry,zwierzę">
+      <option name="closed" value="true" />
+      <created>1715963523994</created>
+      <option name="number" value="00038" />
+      <option name="presentableId" value="LOCAL-00038" />
+      <option name="project" value="LOCAL" />
+      <updated>1715963523994</updated>
+    </task>
+    <option name="localTasksCounter" value="39" />
     <servers />
   </component>
   <component name="UnknownFeatures">
     <option featureType="dependencySupport" implementationName="java:org.projectlombok:lombok" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Dane treningowe : here,there,what" />
     <MESSAGE value="Dane treningowe : who,where, when" />
     <MESSAGE value="Dane treningowe : eat,drink,sleep" />
     <MESSAGE value="Dane treningowe : walk,run,jump" />
@@ -426,6 +433,7 @@
     <MESSAGE value="Dane treningowe : słuchać, rozumieć,kochać,nienawidzić" />
     <MESSAGE value="Dane treningowe : smutny,zły" />
     <MESSAGE value="Dane treningowe : zmęczony,gorący, zimny,  szczęśliwy" />
-    <option name="LAST_COMMIT_MESSAGE" value="Dane treningowe : zmęczony,gorący, zimny,  szczęśliwy" />
+    <MESSAGE value="Dane treningowe : duży, mały, dobry,zwierzę" />
+    <option name="LAST_COMMIT_MESSAGE" value="Dane treningowe : duży, mały, dobry,zwierzę" />
   </component>
 </project>
