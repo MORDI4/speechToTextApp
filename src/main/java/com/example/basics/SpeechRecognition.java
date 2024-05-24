@@ -1,5 +1,15 @@
 package com.example.basics;
 
+import org.deeplearning4j.datasets.iterator.impl.ListDataSetIterator;
+import org.deeplearning4j.earlystopping.EarlyStoppingConfiguration;
+import org.deeplearning4j.earlystopping.EarlyStoppingResult;
+import org.deeplearning4j.earlystopping.saver.InMemoryModelSaver;
+import org.deeplearning4j.earlystopping.scorecalc.DataSetLossCalculator;
+import org.deeplearning4j.earlystopping.termination.MaxEpochsTerminationCondition;
+import org.deeplearning4j.earlystopping.trainer.EarlyStoppingTrainer;
+import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
+
+
 import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.transform.DftNormalization;
 import org.apache.commons.math3.transform.FastFourierTransformer;
@@ -34,7 +44,7 @@ public class SpeechRecognition {
     private static final int SAMPLE_RATE = 44100;
     private static final int BUFFER_SIZE = 1024;
     private static final int NUM_MFCC_COEFFICIENTS = 13;
-    private static final int NUM_RECORDINGS = 150;
+    private static final int NUM_RECORDINGS = 100;
     private static List<String> words = new ArrayList<>();
     private static MultiLayerNetwork model;
     private static final String TRAINING_DATA_FILE = "training_data.csv";
@@ -52,10 +62,9 @@ public class SpeechRecognition {
             }
 
             if (getUserConfirmation(scanner, "Czy chcesz utworzyć model DNN?")) {
-              //  trainAndSaveModel();
+                trainAndSaveModel();
             }
-
-            //recognizeWordsFromAudio();
+            recognizeWordsFromAudio();
         } catch (Exception e) {
             System.err.println("An error occurred: " + e.getMessage());
             e.printStackTrace();
@@ -68,24 +77,105 @@ public class SpeechRecognition {
         return response.equalsIgnoreCase("t");
     }
 
-    private static void loadWordsFromTrainingDataFile() {
-        File file = new File(TRAINING_DATA_FILE);
-        if (!file.exists()) {
-            System.out.println("Training data file does not exist.");
+    private static void recognizeWordsFromAudio() throws Exception {
+        Terminal terminal = TerminalBuilder.terminal();
+        LineReader reader = LineReaderBuilder.builder().terminal(terminal).build();
+        System.out.println("Naciśnij Enter, aby rozpocząć nagrywanie, naciśnij Enter ponownie, aby zakończyć nagrywanie.");
+
+        // Wczytanie modelu z pliku
+        File modelFile = new File("speech_model.zip");
+        if (!modelFile.exists()) {
+            System.out.println("Model file not found.");
+            return;
+        }
+        try {
+            model = ModelSerializer.restoreMultiLayerNetwork(modelFile);
+            System.out.println("Model loaded successfully.");
+        } catch (Exception e) {
+            System.out.println("Failed to load model: " + e.getMessage());
             return;
         }
 
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                String word = line.split(",")[0];
-                if (!words.contains(word)) {
-                    words.add(word);
+        ByteArrayOutputStream currentRecording = new ByteArrayOutputStream();
+        AudioFormat format = new AudioFormat(SAMPLE_RATE, 16, 1, true, true);
+        DataLine.Info info = new DataLine.Info(TargetDataLine.class, format);
+
+        if (!AudioSystem.isLineSupported(info)) {
+            System.out.println("Line not supported");
+            return;
+        }
+
+        TargetDataLine line = (TargetDataLine) AudioSystem.getLine(info);
+        line.open(format);
+        line.start();
+
+        AtomicBoolean isRecording = new AtomicBoolean(false);
+        Thread recordingThread = new Thread(() -> {
+            byte[] buffer = new byte[BUFFER_SIZE];
+            int numBytesRead;
+            while (!Thread.currentThread().isInterrupted() && isRecording.get()) {
+                numBytesRead = line.read(buffer, 0, buffer.length);
+                if (numBytesRead > 0) {
+                    currentRecording.write(buffer, 0, numBytesRead);
                 }
             }
-        } catch (IOException e) {
-            System.err.println("Error loading words from file: " + e.getMessage());
+        });
+
+        // Start recording
+        reader.readLine();
+        isRecording.set(true);
+        recordingThread.start();
+        System.out.println("Recording started. Press Enter to stop.");
+
+        // Wait for user to press Enter to stop recording
+        reader.readLine();
+        isRecording.set(false);
+        recordingThread.interrupt();
+        recordingThread.join();
+        line.stop();
+        line.close();
+
+        System.out.println("Recording stopped. Processing...");
+
+        byte[] audioData = currentRecording.toByteArray();
+        if (audioData.length == 0) {
+            System.out.println("No audio data recorded.");
+            return;
         }
+        System.out.println("Audio data length: " + audioData.length);
+
+        AudioInputStream audioInputStream = new AudioInputStream(new ByteArrayInputStream(audioData), format, audioData.length / format.getFrameSize());
+        double[] mfccFeatures = processAudio(audioInputStream, NUM_MFCC_COEFFICIENTS, SAMPLE_RATE);
+        System.out.println("MFCC Features: " + Arrays.toString(mfccFeatures));
+
+        if (model == null) {
+            System.out.println("Model not loaded.");
+            return;
+        }
+
+        INDArray inputFeatures = Nd4j.create(mfccFeatures).reshape(1, mfccFeatures.length);
+        INDArray output = model.output(inputFeatures);
+        System.out.println("Model output: " + output);
+
+        double maxPredictionValue = output.getDouble(0, Nd4j.argMax(output, 1).getInt(0));
+        System.out.println("Maximum prediction confidence: " + maxPredictionValue);
+
+        // Log probability for each word
+        for (int i = 0; i < words.size(); i++) {
+            double probability = output.getDouble(0, i) * 100;
+            System.out.printf("Probability of '%s': %.2f%%\n", words.get(i), probability);
+        }
+
+        if (maxPredictionValue < 0.6) {  // Ustawienie progu pewności
+            System.out.println("Recognition confidence is too low.");
+        } else {
+            int predictedIndex = Nd4j.argMax(output, 1).getInt(0);
+            String recognizedWord = words.get(predictedIndex);
+            System.out.println("Recognized word: " + recognizedWord);
+        }
+
+        System.out.println("Recording processed. Press Enter to close the program.");
+        reader.readLine();
     }
 
 
@@ -115,6 +205,28 @@ public class SpeechRecognition {
             System.err.println("Error loading words from file: " + e.getMessage());
         }
     }
+
+    private static void loadUniqueWordsFromTrainingDataFile() {
+        File file = new File(TRAINING_DATA_FILE);
+        if (!file.exists()) {
+            System.out.println("Training data file does not exist.");
+            return;
+        }
+
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            Set<String> uniqueWords = new HashSet<>();
+            String line;
+            while ((line = br.readLine()) != null) {
+                String word = line.split(",")[0];
+                uniqueWords.add(word);
+            }
+            words.clear();
+            words.addAll(uniqueWords);
+        } catch (IOException e) {
+            System.err.println("Error loading words from file: " + e.getMessage());
+        }
+    }
+
 
     private static void addTrainingData(Scanner scanner) throws IOException, LineUnavailableException {
         Set<String> uniqueWords = new HashSet<>(words);
@@ -186,7 +298,7 @@ public class SpeechRecognition {
 
 
     private static MultiLayerNetwork trainModel() throws Exception {
-        loadWordsFromListFile();
+        loadUniqueWordsFromTrainingDataFile();
         if (words.isEmpty()) {
             System.out.println("No words loaded. Cannot train model.");
             return null;
@@ -204,20 +316,48 @@ public class SpeechRecognition {
 
         int numInputs = NUM_MFCC_COEFFICIENTS;
         int numOutputs = words.size();
-        int numHiddenNodes = 128;
+        int numHiddenNodes = 512;  // Zwiększona liczba neuronów
 
         MultiLayerNetwork model = new MultiLayerNetwork(new NeuralNetConfiguration.Builder()
-                .updater(new Adam())
+                .updater(new Adam(1e-3))
                 .weightInit(WeightInit.XAVIER)
                 .list()
-                .layer(0, new DenseLayer.Builder().nIn(numInputs).nOut(numHiddenNodes).activation(Activation.RELU).build())
-                .layer(1, new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD).nIn(numHiddenNodes).nOut(numOutputs).activation(Activation.SOFTMAX).build())
+                .layer(0, new DenseLayer.Builder().nIn(numInputs).nOut(numHiddenNodes)
+                        .activation(Activation.LEAKYRELU)  // Zmieniona funkcja aktywacji
+                        .build())
+                .layer(1, new DenseLayer.Builder().nIn(numHiddenNodes).nOut(numHiddenNodes)
+                        .activation(Activation.LEAKYRELU)  // Zmieniona funkcja aktywacji
+                        .build())
+                .layer(2, new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD)
+                        .nIn(numHiddenNodes).nOut(numOutputs)
+                        .activation(Activation.SOFTMAX)
+                        .build())
                 .build());
 
         model.init();
-        model.fit(testAndTrain.getTrain());
-        return model;
+        model.setListeners(new ScoreIterationListener(10));
+
+        EarlyStoppingConfiguration<MultiLayerNetwork> esConf = new EarlyStoppingConfiguration.Builder<MultiLayerNetwork>()
+                .epochTerminationConditions(new MaxEpochsTerminationCondition(50))
+                .scoreCalculator(new DataSetLossCalculator(new ListDataSetIterator<>(testAndTrain.getTest().asList(), 32), true))
+                .evaluateEveryNEpochs(1)
+                .modelSaver(new InMemoryModelSaver<>())
+                .build();
+
+        EarlyStoppingTrainer trainer = new EarlyStoppingTrainer(esConf, model, new ListDataSetIterator<>(testAndTrain.getTrain().asList(), 32));
+
+        EarlyStoppingResult<MultiLayerNetwork> result = trainer.fit();
+
+        System.out.println("Termination reason: " + result.getTerminationReason());
+        System.out.println("Termination details: " + result.getTerminationDetails());
+        System.out.println("Total epochs: " + result.getTotalEpochs());
+        System.out.println("Best epoch number: " + result.getBestModelEpoch());
+        System.out.println("Score at best epoch: " + result.getBestModelScore());
+
+        return result.getBestModel();
     }
+
+
 
 
     private static void evaluateAndSaveModel(MultiLayerNetwork model, File file) throws IOException {
@@ -229,130 +369,6 @@ public class SpeechRecognition {
         System.out.println(eval.stats());
         ModelSerializer.writeModel(model, file, true);
     }
-
-    public static void recognizeWordsFromAudio() throws Exception {
-        Terminal terminal = TerminalBuilder.terminal();
-        LineReader reader = LineReaderBuilder.builder().terminal(terminal).build();
-
-        System.out.println("Naciśnij Enter, aby rozpocząć nagrywanie, naciśnij Enter ponownie, aby zakończyć nagrywanie.");
-
-        ByteArrayOutputStream currentRecording = new ByteArrayOutputStream();
-        AudioFormat format = new AudioFormat(SAMPLE_RATE, 16, 1, true, true);
-        TargetDataLine line = (TargetDataLine) AudioSystem.getLine(new DataLine.Info(TargetDataLine.class, format));
-        line.open(format);
-        line.start();
-
-        AtomicBoolean isRecording = new AtomicBoolean(false);
-
-        Thread recordingThread = new Thread(() -> {
-            byte[] buffer = new byte[1024];
-            int numBytesRead;
-            while (!Thread.currentThread().isInterrupted() && isRecording.get()) {
-                numBytesRead = line.read(buffer, 0, buffer.length);
-                if (numBytesRead > 0) {
-                    currentRecording.write(buffer, 0, numBytesRead);
-                }
-            }
-        });
-
-        // Rozpocznij nagrywanie
-        reader.readLine();
-        isRecording.set(true);
-        recordingThread.start();
-        System.out.println("Rozpoczęto nagrywanie. Naciśnij Enter, aby zakończyć.");
-
-        // Zakończ nagrywanie
-        reader.readLine();
-        isRecording.set(false);
-        recordingThread.interrupt();
-        recordingThread.join(); // Czekaj na zakończenie wątku nagrywającego
-        line.close();
-
-        byte[] audioData = currentRecording.toByteArray();
-        AudioInputStream audioInputStream = new AudioInputStream(new ByteArrayInputStream(audioData), format, audioData.length / 2);
-        List<double[]> wordFeaturesList = processAudioWithVAD(audioInputStream);
-
-        // Przetwarzanie słów
-        for (double[] mfccFeatures : wordFeaturesList) {
-            float[] mfccFeaturesFloat = new float[mfccFeatures.length];
-            for (int i = 0; i < mfccFeatures.length; i++) {
-                mfccFeaturesFloat[i] = (float) mfccFeatures[i];
-            }
-            INDArray inputFeatures = Nd4j.create(mfccFeaturesFloat).reshape(1, mfccFeaturesFloat.length);
-            INDArray output = model.output(inputFeatures);
-            int predictedIndex = Nd4j.argMax(output, 1).getInt(0);
-            System.out.println("Rozpoznane słowo: " + words.get(predictedIndex));
-        }
-
-        System.out.println("Nagranie zakończone. Naciśnij Enter, aby zamknąć program.");
-        reader.readLine(); // Czekaj na Enter, aby zamknąć program
-    }
-
-
-
-
-    private static final double SILENCE_THRESHOLD = 0.2; // Próg energii dla ciszy
-    private static final double MIN_SILENCE_DURATION = SAMPLE_RATE * 0.3; // Czas trwania ciszy w próbkach
-
-    private static List<double[]> processAudioWithVAD(AudioInputStream audioInputStream) throws IOException {
-        FastFourierTransformer fft = new FastFourierTransformer(DftNormalization.STANDARD);
-        List<double[]> wordsFeatures = new ArrayList<>();
-        byte[] buffer = new byte[BUFFER_SIZE];
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        int bytesRead;
-        int wordCount = 0;
-
-        while ((bytesRead = audioInputStream.read(buffer)) != -1) {
-            out.write(buffer, 0, bytesRead);
-        }
-        byte[] audioData = out.toByteArray();
-        double[] samples = convertBytesToDoubleSamples(audioData);
-
-        List<Double> tempBuffer = new ArrayList<>();
-        boolean isSpeech = false;
-
-        for (double sample : samples) {
-            double currentEnergy = sample * sample;
-
-            // Detekcja mowy na podstawie energii sygnału
-            if (currentEnergy > SILENCE_THRESHOLD) {
-                if (!isSpeech) {
-                    // Jeśli mowa się rozpoczyna, dodaj segment do bufora
-                    tempBuffer.add(sample);
-                    isSpeech = true;
-                }
-            } else {
-                if (isSpeech) {
-                    // Jeśli mowa się kończy, przetwórz bufor
-                    double[] segment = tempBuffer.stream().mapToDouble(d -> d).toArray();
-                    segment = Arrays.copyOf(segment, nextPowerOfTwo(segment.length));
-                    Complex[] fftResult = fft.transform(segment, TransformType.FORWARD);
-                    double[] mfccFeatures = calculateMFCC(fftResult, SAMPLE_RATE, NUM_MFCC_COEFFICIENTS);
-                    wordsFeatures.add(mfccFeatures);
-                    tempBuffer.clear();
-                    wordCount++;
-                    isSpeech = false;
-                }
-            }
-        }
-
-        // Obsługa ostatniego segmentu
-        if (!tempBuffer.isEmpty()) {
-            double[] segment = tempBuffer.stream().mapToDouble(d -> d).toArray();
-            segment = Arrays.copyOf(segment, nextPowerOfTwo(segment.length));
-            Complex[] fftResult = fft.transform(segment, TransformType.FORWARD);
-            double[] mfccFeatures = calculateMFCC(fftResult, SAMPLE_RATE, NUM_MFCC_COEFFICIENTS);
-            wordsFeatures.add(mfccFeatures);
-            wordCount++;
-        }
-
-        System.out.println("Liczba wydzielonych słów: " + wordCount);
-        return wordsFeatures;
-    }
-
-
-
-
 
 
     private static byte[] convertDoubleSamplesToBytes(double[] samples) {
@@ -462,7 +478,7 @@ public class SpeechRecognition {
             byte[] audioData = out.toByteArray();
             double[] samples = convertBytesToDoubleSamples(audioData); // Konwersja bajtów na próbki
 
-            samples = trimSilenceFromEdges(samples, 0.02);
+            samples = trimSilenceFromEdges(samples, 0.0001);
             samples = Arrays.copyOf(samples, nextPowerOfTwo(samples.length));
 
             Complex[] fftResult = transformer.transform(samples, TransformType.FORWARD);
@@ -581,15 +597,6 @@ public class SpeechRecognition {
         return filters;
     }
 
-    private static MultiLayerNetwork loadModel(File modelFile) {
-        MultiLayerNetwork model = null;
-        try {
-            model = MultiLayerNetwork.load(modelFile, true);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return model;
-    }
 
     private static double[] oneHotEncode(int index, int size) {
         if (index < 0 || index >= size) {

@@ -4,8 +4,15 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2b8b1008-3418-4230-a8a2-ee0b2892e14a" name="Changes" comment="Dane treningowe : duży, mały, dobry,zwierzę">
+    <list default="true" id="2b8b1008-3418-4230-a8a2-ee0b2892e14a" name="Changes" comment="Przygotowanie kodu do zbierania danych treningowych">
+      <change beforePath="$PROJECT_DIR$/.idea/jarRepositories.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/jarRepositories.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/speech_model.zip" beforeDir="false" afterPath="$PROJECT_DIR$/speech_model.zip" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/basics/SpeechRecognition.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/example/basics/SpeechRecognition.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/example/basics/SpeechRecognition.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/example/basics/SpeechRecognition.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/training_data.csv" beforeDir="false" afterPath="$PROJECT_DIR$/training_data.csv" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/words_list.txt" beforeDir="false" afterPath="$PROJECT_DIR$/words_list.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -61,7 +68,7 @@
     &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
     &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
     &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;
+    &quot;settings.editor.selected.configurable&quot;: &quot;com.intellij.jarRepository.settings.RemoteRepositoriesConfigurable&quot;
   }
 }</component>
   <component name="RecentsManager">
@@ -106,334 +113,23 @@
       <option name="project" value="LOCAL" />
       <updated>1715174756281</updated>
     </task>
-    <task id="LOCAL-00002" summary="Dane trenigowe : hi , how">
+    <task id="LOCAL-00002" summary="Przygotowanie kodu do zbierania danych treningowych">
       <option name="closed" value="true" />
-      <created>1715197766612</created>
+      <created>1715178796153</created>
       <option name="number" value="00002" />
       <option name="presentableId" value="LOCAL-00002" />
       <option name="project" value="LOCAL" />
-      <updated>1715197766612</updated>
+      <updated>1715178796153</updated>
     </task>
-    <task id="LOCAL-00003" summary="Dane treningowe : are">
-      <option name="closed" value="true" />
-      <created>1715198315829</created>
-      <option name="number" value="00003" />
-      <option name="presentableId" value="LOCAL-00003" />
-      <option name="project" value="LOCAL" />
-      <updated>1715198315829</updated>
-    </task>
-    <task id="LOCAL-00004" summary="Dane treningowe : you">
-      <option name="closed" value="true" />
-      <created>1715199105598</created>
-      <option name="number" value="00004" />
-      <option name="presentableId" value="LOCAL-00004" />
-      <option name="project" value="LOCAL" />
-      <updated>1715199105598</updated>
-    </task>
-    <task id="LOCAL-00005" summary="Dane treningowe : animal">
-      <option name="closed" value="true" />
-      <created>1715275622310</created>
-      <option name="number" value="00005" />
-      <option name="presentableId" value="LOCAL-00005" />
-      <option name="project" value="LOCAL" />
-      <updated>1715275622310</updated>
-    </task>
-    <task id="LOCAL-00006" summary="Dane treningowe : apple , be">
-      <option name="closed" value="true" />
-      <created>1715276478901</created>
-      <option name="number" value="00006" />
-      <option name="presentableId" value="LOCAL-00006" />
-      <option name="project" value="LOCAL" />
-      <updated>1715276478901</updated>
-    </task>
-    <task id="LOCAL-00007" summary="Dane treningowe : bank , bar">
-      <option name="closed" value="true" />
-      <created>1715278247432</created>
-      <option name="number" value="00007" />
-      <option name="presentableId" value="LOCAL-00007" />
-      <option name="project" value="LOCAL" />
-      <updated>1715278247432</updated>
-    </task>
-    <task id="LOCAL-00008" summary="Dane treningowe : yes,no">
-      <option name="closed" value="true" />
-      <created>1715418193745</created>
-      <option name="number" value="00008" />
-      <option name="presentableId" value="LOCAL-00008" />
-      <option name="project" value="LOCAL" />
-      <updated>1715418193745</updated>
-    </task>
-    <task id="LOCAL-00009" summary="Dane treningowe : goodbye&#10;                  thank &#10;                  please">
-      <option name="closed" value="true" />
-      <created>1715439516070</created>
-      <option name="number" value="00009" />
-      <option name="presentableId" value="LOCAL-00009" />
-      <option name="project" value="LOCAL" />
-      <updated>1715439516070</updated>
-    </task>
-    <task id="LOCAL-00010" summary="Dane treningowe : sorry ,I, he">
-      <option name="closed" value="true" />
-      <created>1715446156435</created>
-      <option name="number" value="00010" />
-      <option name="presentableId" value="LOCAL-00010" />
-      <option name="project" value="LOCAL" />
-      <updated>1715446156435</updated>
-    </task>
-    <task id="LOCAL-00011" summary="Dane treningowe : she,it,we">
-      <option name="closed" value="true" />
-      <created>1715448168185</created>
-      <option name="number" value="00011" />
-      <option name="presentableId" value="LOCAL-00011" />
-      <option name="project" value="LOCAL" />
-      <updated>1715448168185</updated>
-    </task>
-    <task id="LOCAL-00012" summary="Dane treningowe : they ,this, that">
-      <option name="closed" value="true" />
-      <created>1715450286505</created>
-      <option name="number" value="00012" />
-      <option name="presentableId" value="LOCAL-00012" />
-      <option name="project" value="LOCAL" />
-      <updated>1715450286505</updated>
-    </task>
-    <task id="LOCAL-00013" summary="Dane treningowe : here,there,what">
-      <option name="closed" value="true" />
-      <created>1715453925903</created>
-      <option name="number" value="00013" />
-      <option name="presentableId" value="LOCAL-00013" />
-      <option name="project" value="LOCAL" />
-      <updated>1715453925903</updated>
-    </task>
-    <task id="LOCAL-00014" summary="Dane treningowe : who,where, when">
-      <option name="closed" value="true" />
-      <created>1715455601122</created>
-      <option name="number" value="00014" />
-      <option name="presentableId" value="LOCAL-00014" />
-      <option name="project" value="LOCAL" />
-      <updated>1715455601122</updated>
-    </task>
-    <task id="LOCAL-00015" summary="Dane treningowe : eat,drink,sleep">
-      <option name="closed" value="true" />
-      <created>1715537326257</created>
-      <option name="number" value="00015" />
-      <option name="presentableId" value="LOCAL-00015" />
-      <option name="project" value="LOCAL" />
-      <updated>1715537326257</updated>
-    </task>
-    <task id="LOCAL-00016" summary="Dane treningowe : walk,run,jump">
-      <option name="closed" value="true" />
-      <created>1715538260458</created>
-      <option name="number" value="00016" />
-      <option name="presentableId" value="LOCAL-00016" />
-      <option name="project" value="LOCAL" />
-      <updated>1715538260458</updated>
-    </task>
-    <task id="LOCAL-00017" summary="Dane treningowe : sit,stand,read">
-      <option name="closed" value="true" />
-      <created>1715539259946</created>
-      <option name="number" value="00017" />
-      <option name="presentableId" value="LOCAL-00017" />
-      <option name="project" value="LOCAL" />
-      <updated>1715539259946</updated>
-    </task>
-    <task id="LOCAL-00018" summary="Dane treningowe : write ,speak ,listen">
-      <option name="closed" value="true" />
-      <created>1715613224420</created>
-      <option name="number" value="00018" />
-      <option name="presentableId" value="LOCAL-00018" />
-      <option name="project" value="LOCAL" />
-      <updated>1715613224420</updated>
-    </task>
-    <task id="LOCAL-00019" summary="Dane treningowe : listen,understand,love">
-      <option name="closed" value="true" />
-      <created>1715620915225</created>
-      <option name="number" value="00019" />
-      <option name="presentableId" value="LOCAL-00019" />
-      <option name="project" value="LOCAL" />
-      <updated>1715620915225</updated>
-    </task>
-    <task id="LOCAL-00020" summary="Dane treningowe : hate,happy,sad">
-      <option name="closed" value="true" />
-      <created>1715622566717</created>
-      <option name="number" value="00020" />
-      <option name="presentableId" value="LOCAL-00020" />
-      <option name="project" value="LOCAL" />
-      <updated>1715622566717</updated>
-    </task>
-    <task id="LOCAL-00021" summary="Dane treningowe : angry ,tired,hot">
-      <option name="closed" value="true" />
-      <created>1715624043212</created>
-      <option name="number" value="00021" />
-      <option name="presentableId" value="LOCAL-00021" />
-      <option name="project" value="LOCAL" />
-      <updated>1715624043212</updated>
-    </task>
-    <task id="LOCAL-00022" summary="Dane treningowe : cold ,big,small">
-      <option name="closed" value="true" />
-      <created>1715625114797</created>
-      <option name="number" value="00022" />
-      <option name="presentableId" value="LOCAL-00022" />
-      <option name="project" value="LOCAL" />
-      <updated>1715625114797</updated>
-    </task>
-    <task id="LOCAL-00023" summary="Dane treningowe :good,bad, cześć">
-      <option name="closed" value="true" />
-      <created>1715627118966</created>
-      <option name="number" value="00023" />
-      <option name="presentableId" value="LOCAL-00023" />
-      <option name="project" value="LOCAL" />
-      <updated>1715627118966</updated>
-    </task>
-    <task id="LOCAL-00024" summary="Dane treningowe : nie,do widzenia ,tak">
-      <option name="closed" value="true" />
-      <created>1715715240088</created>
-      <option name="number" value="00024" />
-      <option name="presentableId" value="LOCAL-00024" />
-      <option name="project" value="LOCAL" />
-      <updated>1715715240088</updated>
-    </task>
-    <task id="LOCAL-00025" summary="Dane treningowe : przepraszam,dziękuję, proszę">
-      <option name="closed" value="true" />
-      <created>1715716210721</created>
-      <option name="number" value="00025" />
-      <option name="presentableId" value="LOCAL-00025" />
-      <option name="project" value="LOCAL" />
-      <updated>1715716210721</updated>
-    </task>
-    <task id="LOCAL-00026" summary="Dane treningowe : ja ,ty ,on">
-      <option name="closed" value="true" />
-      <created>1715716975926</created>
-      <option name="number" value="00026" />
-      <option name="presentableId" value="LOCAL-00026" />
-      <option name="project" value="LOCAL" />
-      <updated>1715716975926</updated>
-    </task>
-    <task id="LOCAL-00027" summary="Dane treningowe : ona,to,my">
-      <option name="closed" value="true" />
-      <created>1715786959915</created>
-      <option name="number" value="00027" />
-      <option name="presentableId" value="LOCAL-00027" />
-      <option name="project" value="LOCAL" />
-      <updated>1715786959916</updated>
-    </task>
-    <task id="LOCAL-00028" summary="Dane treningowe : oni , ten ,tamten">
-      <option name="closed" value="true" />
-      <created>1715787752212</created>
-      <option name="number" value="00028" />
-      <option name="presentableId" value="LOCAL-00028" />
-      <option name="project" value="LOCAL" />
-      <updated>1715787752212</updated>
-    </task>
-    <task id="LOCAL-00029" summary="Dane treningowe : tutaj, tam , co">
-      <option name="closed" value="true" />
-      <created>1715788581487</created>
-      <option name="number" value="00029" />
-      <option name="presentableId" value="LOCAL-00029" />
-      <option name="project" value="LOCAL" />
-      <updated>1715788581487</updated>
-    </task>
-    <task id="LOCAL-00030" summary="Dane treningowe : kto, gdzie, kiedy">
-      <option name="closed" value="true" />
-      <created>1715876596540</created>
-      <option name="number" value="00030" />
-      <option name="presentableId" value="LOCAL-00030" />
-      <option name="project" value="LOCAL" />
-      <updated>1715876596540</updated>
-    </task>
-    <task id="LOCAL-00031" summary="Dane treningowe : dlaczego ,jak , jeść">
-      <option name="closed" value="true" />
-      <created>1715877623278</created>
-      <option name="number" value="00031" />
-      <option name="presentableId" value="LOCAL-00031" />
-      <option name="project" value="LOCAL" />
-      <updated>1715877623278</updated>
-    </task>
-    <task id="LOCAL-00032" summary="Dane treningowe : pić, spać ,chodzić">
-      <option name="closed" value="true" />
-      <created>1715878468830</created>
-      <option name="number" value="00032" />
-      <option name="presentableId" value="LOCAL-00032" />
-      <option name="project" value="LOCAL" />
-      <updated>1715878468830</updated>
-    </task>
-    <task id="LOCAL-00033" summary="Dane treningowe : biegać, skakać ,siedzieć">
-      <option name="closed" value="true" />
-      <created>1715879306920</created>
-      <option name="number" value="00033" />
-      <option name="presentableId" value="LOCAL-00033" />
-      <option name="project" value="LOCAL" />
-      <updated>1715879306920</updated>
-    </task>
-    <task id="LOCAL-00034" summary="Dane treningowe : pisać,czytać, stać,mówić">
-      <option name="closed" value="true" />
-      <created>1715881585343</created>
-      <option name="number" value="00034" />
-      <option name="presentableId" value="LOCAL-00034" />
-      <option name="project" value="LOCAL" />
-      <updated>1715881585343</updated>
-    </task>
-    <task id="LOCAL-00035" summary="Dane treningowe : słuchać, rozumieć,kochać,nienawidzić">
-      <option name="closed" value="true" />
-      <created>1715882907075</created>
-      <option name="number" value="00035" />
-      <option name="presentableId" value="LOCAL-00035" />
-      <option name="project" value="LOCAL" />
-      <updated>1715882907075</updated>
-    </task>
-    <task id="LOCAL-00036" summary="Dane treningowe : smutny,zły">
-      <option name="closed" value="true" />
-      <created>1715960829448</created>
-      <option name="number" value="00036" />
-      <option name="presentableId" value="LOCAL-00036" />
-      <option name="project" value="LOCAL" />
-      <updated>1715960829449</updated>
-    </task>
-    <task id="LOCAL-00037" summary="Dane treningowe : zmęczony,gorący, zimny,  szczęśliwy">
-      <option name="closed" value="true" />
-      <created>1715962389315</created>
-      <option name="number" value="00037" />
-      <option name="presentableId" value="LOCAL-00037" />
-      <option name="project" value="LOCAL" />
-      <updated>1715962389315</updated>
-    </task>
-    <task id="LOCAL-00038" summary="Dane treningowe : duży, mały, dobry,zwierzę">
-      <option name="closed" value="true" />
-      <created>1715963523994</created>
-      <option name="number" value="00038" />
-      <option name="presentableId" value="LOCAL-00038" />
-      <option name="project" value="LOCAL" />
-      <updated>1715963523994</updated>
-    </task>
-    <option name="localTasksCounter" value="39" />
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="UnknownFeatures">
     <option featureType="dependencySupport" implementationName="java:org.projectlombok:lombok" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Dane treningowe : who,where, when" />
-    <MESSAGE value="Dane treningowe : eat,drink,sleep" />
-    <MESSAGE value="Dane treningowe : walk,run,jump" />
-    <MESSAGE value="Dane treningowe : sit,stand,read" />
-    <MESSAGE value="Dane treningowe : write ,speak ,listen" />
-    <MESSAGE value="Dane treningowe : listen,understand,love" />
-    <MESSAGE value="Dane treningowe : hate,happy,sad" />
-    <MESSAGE value="Dane treningowe : angry ,tired,hot" />
-    <MESSAGE value="Dane treningowe : cold ,big,small" />
-    <MESSAGE value="Dane treningowe :good,bad, cześć" />
-    <MESSAGE value="Dane treningowe : nie,do widzenia ,tak" />
-    <MESSAGE value="Dane treningowe : przepraszam,dziękuję, proszę" />
-    <MESSAGE value="Dane treningowe : ja ,ty ,on" />
-    <MESSAGE value="Dane treningowe : ona,to,my" />
-    <MESSAGE value="Dane treningowe : oni , ten ,tamten" />
-    <MESSAGE value="Dane treningowe : tutaj, tam , co" />
-    <MESSAGE value="Dane treningowe : kto, gdzie, kiedy" />
-    <MESSAGE value="Dane treningowe : dlaczego ,jak , jeść" />
-    <MESSAGE value="Dane treningowe : pić, spać ,chodzić" />
-    <MESSAGE value="Dane treningowe : biegać, skakać ,siedzieć" />
-    <MESSAGE value="Dane treningowe : pisać,czytać, stać,mówić" />
-    <MESSAGE value="Dane treningowe : słuchać, rozumieć,kochać,nienawidzić" />
-    <MESSAGE value="Dane treningowe : smutny,zły" />
-    <MESSAGE value="Dane treningowe : zmęczony,gorący, zimny,  szczęśliwy" />
-    <MESSAGE value="Dane treningowe : duży, mały, dobry,zwierzę" />
-    <option name="LAST_COMMIT_MESSAGE" value="Dane treningowe : duży, mały, dobry,zwierzę" />
+    <MESSAGE value="Naprawa błędów związanych z załadowanie projektu" />
+    <MESSAGE value="Przygotowanie kodu do zbierania danych treningowych" />
+    <option name="LAST_COMMIT_MESSAGE" value="Przygotowanie kodu do zbierania danych treningowych" />
   </component>
 </project>

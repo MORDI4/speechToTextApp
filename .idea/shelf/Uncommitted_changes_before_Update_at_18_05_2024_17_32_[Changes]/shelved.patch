@@ -1,0 +1,458 @@
+Index: src/main/java/com/example/basics/SpeechRecognition.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.basics;\r\n\r\nimport org.apache.commons.math3.complex.Complex;\r\nimport org.apache.commons.math3.transform.DftNormalization;\r\nimport org.apache.commons.math3.transform.FastFourierTransformer;\r\nimport org.apache.commons.math3.transform.TransformType;\r\nimport org.deeplearning4j.eval.Evaluation;\r\nimport org.deeplearning4j.nn.conf.NeuralNetConfiguration;\r\nimport org.deeplearning4j.nn.conf.layers.DenseLayer;\r\nimport org.deeplearning4j.nn.conf.layers.OutputLayer;\r\nimport org.deeplearning4j.nn.multilayer.MultiLayerNetwork;\r\nimport org.deeplearning4j.nn.weights.WeightInit;\r\nimport org.deeplearning4j.util.ModelSerializer;\r\nimport org.nd4j.linalg.activations.Activation;\r\nimport org.nd4j.linalg.api.ndarray.INDArray;\r\nimport org.nd4j.linalg.dataset.DataSet;\r\nimport org.nd4j.linalg.dataset.SplitTestAndTrain;\r\nimport org.nd4j.linalg.factory.Nd4j;\r\nimport org.nd4j.linalg.learning.config.Adam;\r\nimport org.nd4j.linalg.lossfunctions.LossFunctions;\r\nimport org.jline.reader.LineReader;\r\nimport org.jline.reader.LineReaderBuilder;\r\nimport org.jline.terminal.Terminal;\r\nimport org.jline.terminal.TerminalBuilder;\r\nimport java.util.concurrent.atomic.AtomicBoolean;\r\n\r\nimport javax.sound.sampled.*;\r\nimport java.io.*;\r\nimport java.util.*;\r\n\r\npublic class SpeechRecognition {\r\n\r\n    // Zmienne klasowe\r\n    private static final int SAMPLE_RATE = 44100;\r\n    private static final int BUFFER_SIZE = 1024;\r\n    private static final int NUM_MFCC_COEFFICIENTS = 13;\r\n    private static final int NUM_RECORDINGS = 5;\r\n    private static List<String> words = new ArrayList<>();\r\n    private static MultiLayerNetwork model;\r\n    private static final String TRAINING_DATA_FILE = \"training_data.csv\";\r\n    private static final String WORDS_LIST_FILE = \"words_list.txt\";\r\n\r\n\r\n\r\n    public static void main(String[] args) {\r\n\r\n        System.out.println(\"Starting main method...\");\r\n        try (Scanner scanner = new Scanner(System.in)) {\r\n            loadWordsFromListFile();\r\n            if (getUserConfirmation(scanner, \"Czy chcesz dodać dane treningowe?\")) {\r\n                addTrainingData(scanner);\r\n            }\r\n\r\n            if (getUserConfirmation(scanner, \"Czy chcesz utworzyć model DNN?\")) {\r\n                trainAndSaveModel();\r\n            }\r\n\r\n            //recognizeWordsFromAudio();\r\n        } catch (Exception e) {\r\n            System.err.println(\"An error occurred: \" + e.getMessage());\r\n            e.printStackTrace();\r\n        }\r\n    }\r\n\r\n    private static boolean getUserConfirmation(Scanner scanner, String message) {\r\n        System.out.println(message + \" (t - tak, n - nie)\");\r\n        String response = scanner.nextLine();\r\n        return response.equalsIgnoreCase(\"t\");\r\n    }\r\n\r\n    private static void loadWordsFromTrainingDataFile() {\r\n        File file = new File(TRAINING_DATA_FILE);\r\n        if (!file.exists()) {\r\n            System.out.println(\"Training data file does not exist.\");\r\n            return;\r\n        }\r\n\r\n        try (BufferedReader br = new BufferedReader(new FileReader(file))) {\r\n            String line;\r\n            while ((line = br.readLine()) != null) {\r\n                String word = line.split(\",\")[0];\r\n                if (!words.contains(word)) {\r\n                    words.add(word);\r\n                }\r\n            }\r\n        } catch (IOException e) {\r\n            System.err.println(\"Error loading words from file: \" + e.getMessage());\r\n        }\r\n    }\r\n\r\n\r\n    private static void trainAndSaveModel() {\r\n        System.out.println(\"Training model...\");\r\n        try {\r\n            model = trainModel();\r\n            if (model != null) {\r\n                System.out.println(\"Model trained successfully, evaluating and saving...\");\r\n                evaluateAndSaveModel(model, new File(\"speech_model.zip\"));\r\n            } else {\r\n                System.out.println(\"Model training failed.\");\r\n            }\r\n        } catch (Exception e) {\r\n            System.err.println(\"Error training model: \" + e.getMessage());\r\n            e.printStackTrace();\r\n        }\r\n    }\r\n\r\n    private static void loadWordsFromListFile() {\r\n        try (BufferedReader br = new BufferedReader(new FileReader(WORDS_LIST_FILE))) {\r\n            String line;\r\n            while ((line = br.readLine()) != null) {\r\n                words.add(line.trim());\r\n            }\r\n        } catch (IOException e) {\r\n            System.err.println(\"Error loading words from file: \" + e.getMessage());\r\n        }\r\n    }\r\n\r\n    private static void addTrainingData(Scanner scanner) throws IOException, LineUnavailableException {\r\n        Set<String> uniqueWords = new HashSet<>(words);\r\n        System.out.println(\"Dostępne słowa: \" + uniqueWords);\r\n        for (String word : uniqueWords) {\r\n            List<double[]> mfccSamples = recordWordSamples(scanner, word);\r\n            for (double[] mfcc : mfccSamples) {\r\n                saveTrainingData(word, mfcc);\r\n            }\r\n        }\r\n    }\r\n\r\n    private static void saveTrainingData(String word, double[] mfccFeatures) throws IOException {\r\n        try (FileWriter fw = new FileWriter(TRAINING_DATA_FILE, true);\r\n             BufferedWriter bw = new BufferedWriter(fw);\r\n             PrintWriter out = new PrintWriter(bw)) {\r\n            out.print(word);\r\n            for (double feature : mfccFeatures) {\r\n                out.print(\",\" + feature);\r\n            }\r\n            out.println();\r\n        }\r\n    }\r\n\r\n\r\n    private static List<DataSet> loadTrainingDataFromFile() {\r\n        List<DataSet> dataSetList = new ArrayList<>();\r\n        File file = new File(TRAINING_DATA_FILE);\r\n        if (!file.exists()) {\r\n            return dataSetList;\r\n        }\r\n\r\n        try (BufferedReader br = new BufferedReader(new FileReader(file))) {\r\n            String line;\r\n            while ((line = br.readLine()) != null) {\r\n                String[] values = line.split(\",\");\r\n                String wordLabel = values[0];\r\n                double[] mfccFeatures = Arrays.stream(values, 1, values.length).mapToDouble(Double::parseDouble).toArray();\r\n\r\n                int wordIndex = words.indexOf(wordLabel);\r\n                INDArray input = Nd4j.create(new double[][]{mfccFeatures});\r\n                INDArray label = Nd4j.zeros(1, words.size());\r\n                label.putScalar(0, wordIndex, 1);\r\n                dataSetList.add(new DataSet(input, label));\r\n            }\r\n        } catch (IOException e) {\r\n            System.err.println(\"Error reading training data file.\");\r\n            e.printStackTrace();\r\n        }\r\n        return dataSetList;\r\n    }\r\n\r\n\r\n\r\n\r\n    private static List<double[]> recordWordSamples(Scanner scanner, String word) throws IOException, LineUnavailableException {\r\n        List<double[]> mfccSamples = new ArrayList<>();\r\n        System.out.println(\"Nagrywanie próbek dla słowa: \" + word);\r\n        for (int i = 0; i < NUM_RECORDINGS; i++) {\r\n            System.out.println(\"Naciśnij Enter, aby rozpocząć nagrywanie (\" + (i + 1) + \"/\" + NUM_RECORDINGS + \")\");\r\n            scanner.nextLine();\r\n            byte[] audioData = recordAudio(SAMPLE_RATE);\r\n            AudioInputStream audioInputStream = new AudioInputStream(new ByteArrayInputStream(audioData), new AudioFormat(SAMPLE_RATE, 16, 1, true, true), audioData.length / 2);\r\n            double[] mfccFeatures = processAudio(audioInputStream, NUM_MFCC_COEFFICIENTS, SAMPLE_RATE);\r\n            mfccSamples.add(mfccFeatures);\r\n        }\r\n        return mfccSamples;\r\n    }\r\n\r\n\r\n    private static MultiLayerNetwork trainModel() throws Exception {\r\n        loadWordsFromListFile();\r\n        if (words.isEmpty()) {\r\n            System.out.println(\"No words loaded. Cannot train model.\");\r\n            return null;\r\n        }\r\n\r\n        List<DataSet> trainingData = loadTrainingDataFromFile();\r\n        if (trainingData.isEmpty()) {\r\n            System.out.println(\"No training data available.\");\r\n            return null;\r\n        }\r\n\r\n        DataSet allData = DataSet.merge(trainingData);\r\n        allData.shuffle();\r\n        SplitTestAndTrain testAndTrain = allData.splitTestAndTrain(0.8);\r\n\r\n        int numInputs = NUM_MFCC_COEFFICIENTS;\r\n        int numOutputs = words.size();\r\n        int numHiddenNodes = 128;\r\n\r\n        MultiLayerNetwork model = new MultiLayerNetwork(new NeuralNetConfiguration.Builder()\r\n                .updater(new Adam())\r\n                .weightInit(WeightInit.XAVIER)\r\n                .list()\r\n                .layer(0, new DenseLayer.Builder().nIn(numInputs).nOut(numHiddenNodes).activation(Activation.RELU).build())\r\n                .layer(1, new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD).nIn(numHiddenNodes).nOut(numOutputs).activation(Activation.SOFTMAX).build())\r\n                .build());\r\n\r\n        model.init();\r\n        model.fit(testAndTrain.getTrain());\r\n        return model;\r\n    }\r\n\r\n\r\n    private static void evaluateAndSaveModel(MultiLayerNetwork model, File file) throws IOException {\r\n        Evaluation eval = new Evaluation(words.size());\r\n        List<DataSet> trainingData = loadTrainingDataFromFile();\r\n        DataSet allData = DataSet.merge(trainingData);\r\n        INDArray output = model.output(allData.getFeatures());\r\n        eval.eval(allData.getLabels(), output);\r\n        System.out.println(eval.stats());\r\n        ModelSerializer.writeModel(model, file, true);\r\n    }\r\n\r\n    public static void recognizeWordsFromAudio() throws Exception {\r\n        Terminal terminal = TerminalBuilder.terminal();\r\n        LineReader reader = LineReaderBuilder.builder().terminal(terminal).build();\r\n\r\n        System.out.println(\"Naciśnij Enter, aby rozpocząć nagrywanie, naciśnij Enter ponownie, aby zakończyć nagrywanie.\");\r\n\r\n        ByteArrayOutputStream currentRecording = new ByteArrayOutputStream();\r\n        AudioFormat format = new AudioFormat(SAMPLE_RATE, 16, 1, true, true);\r\n        TargetDataLine line = (TargetDataLine) AudioSystem.getLine(new DataLine.Info(TargetDataLine.class, format));\r\n        line.open(format);\r\n        line.start();\r\n\r\n        AtomicBoolean isRecording = new AtomicBoolean(false);\r\n\r\n        Thread recordingThread = new Thread(() -> {\r\n            byte[] buffer = new byte[1024];\r\n            int numBytesRead;\r\n            while (!Thread.currentThread().isInterrupted() && isRecording.get()) {\r\n                numBytesRead = line.read(buffer, 0, buffer.length);\r\n                if (numBytesRead > 0) {\r\n                    currentRecording.write(buffer, 0, numBytesRead);\r\n                }\r\n            }\r\n        });\r\n\r\n        // Rozpocznij nagrywanie\r\n        reader.readLine();\r\n        isRecording.set(true);\r\n        recordingThread.start();\r\n        System.out.println(\"Rozpoczęto nagrywanie. Naciśnij Enter, aby zakończyć.\");\r\n\r\n        // Zakończ nagrywanie\r\n        reader.readLine();\r\n        isRecording.set(false);\r\n        recordingThread.interrupt();\r\n        recordingThread.join(); // Czekaj na zakończenie wątku nagrywającego\r\n        line.close();\r\n\r\n        byte[] audioData = currentRecording.toByteArray();\r\n        AudioInputStream audioInputStream = new AudioInputStream(new ByteArrayInputStream(audioData), format, audioData.length / 2);\r\n        List<double[]> wordFeaturesList = processAudioWithVAD(audioInputStream);\r\n\r\n        // Przetwarzanie słów\r\n        for (double[] mfccFeatures : wordFeaturesList) {\r\n            float[] mfccFeaturesFloat = new float[mfccFeatures.length];\r\n            for (int i = 0; i < mfccFeatures.length; i++) {\r\n                mfccFeaturesFloat[i] = (float) mfccFeatures[i];\r\n            }\r\n            INDArray inputFeatures = Nd4j.create(mfccFeaturesFloat).reshape(1, mfccFeaturesFloat.length);\r\n            INDArray output = model.output(inputFeatures);\r\n            int predictedIndex = Nd4j.argMax(output, 1).getInt(0);\r\n            System.out.println(\"Rozpoznane słowo: \" + words.get(predictedIndex));\r\n        }\r\n\r\n        System.out.println(\"Nagranie zakończone. Naciśnij Enter, aby zamknąć program.\");\r\n        reader.readLine(); // Czekaj na Enter, aby zamknąć program\r\n    }\r\n\r\n\r\n\r\n\r\n    private static final double SILENCE_THRESHOLD = 0.2; // Próg energii dla ciszy\r\n    private static final double MIN_SILENCE_DURATION = SAMPLE_RATE * 0.3; // Czas trwania ciszy w próbkach\r\n\r\n    private static List<double[]> processAudioWithVAD(AudioInputStream audioInputStream) throws IOException {\r\n        FastFourierTransformer fft = new FastFourierTransformer(DftNormalization.STANDARD);\r\n        List<double[]> wordsFeatures = new ArrayList<>();\r\n        byte[] buffer = new byte[BUFFER_SIZE];\r\n        ByteArrayOutputStream out = new ByteArrayOutputStream();\r\n        int bytesRead;\r\n        int wordCount = 0;\r\n\r\n        while ((bytesRead = audioInputStream.read(buffer)) != -1) {\r\n            out.write(buffer, 0, bytesRead);\r\n        }\r\n        byte[] audioData = out.toByteArray();\r\n        double[] samples = convertBytesToDoubleSamples(audioData);\r\n\r\n        List<Double> tempBuffer = new ArrayList<>();\r\n        boolean isSpeech = false;\r\n\r\n        for (double sample : samples) {\r\n            double currentEnergy = sample * sample;\r\n\r\n            // Detekcja mowy na podstawie energii sygnału\r\n            if (currentEnergy > SILENCE_THRESHOLD) {\r\n                if (!isSpeech) {\r\n                    // Jeśli mowa się rozpoczyna, dodaj segment do bufora\r\n                    tempBuffer.add(sample);\r\n                    isSpeech = true;\r\n                }\r\n            } else {\r\n                if (isSpeech) {\r\n                    // Jeśli mowa się kończy, przetwórz bufor\r\n                    double[] segment = tempBuffer.stream().mapToDouble(d -> d).toArray();\r\n                    segment = Arrays.copyOf(segment, nextPowerOfTwo(segment.length));\r\n                    Complex[] fftResult = fft.transform(segment, TransformType.FORWARD);\r\n                    double[] mfccFeatures = calculateMFCC(fftResult, SAMPLE_RATE, NUM_MFCC_COEFFICIENTS);\r\n                    wordsFeatures.add(mfccFeatures);\r\n                    tempBuffer.clear();\r\n                    wordCount++;\r\n                    isSpeech = false;\r\n                }\r\n            }\r\n        }\r\n\r\n        // Obsługa ostatniego segmentu\r\n        if (!tempBuffer.isEmpty()) {\r\n            double[] segment = tempBuffer.stream().mapToDouble(d -> d).toArray();\r\n            segment = Arrays.copyOf(segment, nextPowerOfTwo(segment.length));\r\n            Complex[] fftResult = fft.transform(segment, TransformType.FORWARD);\r\n            double[] mfccFeatures = calculateMFCC(fftResult, SAMPLE_RATE, NUM_MFCC_COEFFICIENTS);\r\n            wordsFeatures.add(mfccFeatures);\r\n            wordCount++;\r\n        }\r\n\r\n        System.out.println(\"Liczba wydzielonych słów: \" + wordCount);\r\n        return wordsFeatures;\r\n    }\r\n\r\n\r\n\r\n\r\n\r\n\r\n    private static byte[] convertDoubleSamplesToBytes(double[] samples) {\r\n        byte[] byteData = new byte[samples.length * 2];  // każda próbka będzie miała 2 bajty (16-bitowe wartości)\r\n        for (int i = 0; i < samples.length; i++) {\r\n            int sampleAsInt = (int) (samples[i] * 32767.0);  // przeskalowanie do zakresu 16-bitowego int\r\n            byteData[i * 2] = (byte) (sampleAsInt & 0xFF);  // młodszy bajt\r\n            byteData[i * 2 + 1] = (byte) ((sampleAsInt >> 8) & 0xFF);  // starszy bajt\r\n        }\r\n        return byteData;\r\n    }\r\n\r\n\r\n    // Metoda do konwersji bajtów na próbki typu double\r\n    private static double[] convertBytesToDoubleSamples(byte[] audioBytes) {\r\n        double[] samples = new double[audioBytes.length / 2];\r\n        for (int i = 0; i < samples.length; i++) {\r\n            samples[i] = (audioBytes[2 * i] | (audioBytes[2 * i + 1] << 8)) / 32768.0;\r\n        }\r\n        return samples;\r\n    }\r\n\r\n\r\n    private static MultiLayerNetwork buildModel(int numInputs, int numOutputs, int numHiddenNodes) {\r\n        return new MultiLayerNetwork(new NeuralNetConfiguration.Builder()\r\n                .updater(new Adam())\r\n                .weightInit(WeightInit.XAVIER)\r\n                .list()\r\n                .layer(0, new DenseLayer.Builder().nIn(numInputs).nOut(numHiddenNodes)\r\n                        .activation(Activation.RELU)\r\n                        .build())\r\n                .layer(1, new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD)\r\n                        .nIn(numHiddenNodes).nOut(numOutputs)\r\n                        .activation(Activation.SOFTMAX)\r\n                        .build())\r\n                .build());\r\n    }\r\n\r\n\r\n    private static byte[] recordAudio(int sampleRate) throws LineUnavailableException {\r\n        AudioFormat format = new AudioFormat(sampleRate, 16, 1, true, true);\r\n        DataLine.Info info = new DataLine.Info(TargetDataLine.class, format);\r\n        if (!AudioSystem.isLineSupported(info)) {\r\n            throw new LineUnavailableException(\"Audio line not supported.\");\r\n        }\r\n        System.out.println(\"Rozpoczęto nagrywanie...\");\r\n        byte[] audioData = null;\r\n        try (TargetDataLine line = (TargetDataLine) AudioSystem.getLine(info)) {\r\n            line.open(format);\r\n            line.start();\r\n\r\n            ByteArrayOutputStream out = new ByteArrayOutputStream();\r\n            byte[] data = new byte[1024];\r\n            int numBytesRead;\r\n            boolean recording = true; // Dodajemy zmienną reprezentującą stan nagrywania\r\n\r\n            while (recording && !Thread.currentThread().isInterrupted()) {\r\n                numBytesRead = line.read(data, 0, data.length);\r\n                if (numBytesRead > 0) {\r\n                    out.write(data, 0, numBytesRead);\r\n                }\r\n                // Sprawdź, czy użytkownik nacisnął Enter, aby zakończyć nagrywanie\r\n                if (System.in.available() > 0 && System.in.read() == '\\n') {\r\n                    recording = false;\r\n                    System.out.println(\"Zakończono nagrywanie.\");\r\n                }\r\n            }\r\n            audioData = out.toByteArray();\r\n            out.close();\r\n        } catch (IOException e) {\r\n            System.err.println(\"Error while recording audio: \" + e.getMessage());\r\n        }\r\n\r\n        double[] samples = convertBytesToDoubleSamples(audioData);\r\n        double[] normalizedFilteredSamples = filterAndNormalize(samples);\r\n        return convertDoubleSamplesToBytes(normalizedFilteredSamples);\r\n    }\r\n\r\n\r\n\r\n    private static double[] filterAndNormalize(double[] samples) {\r\n        double max = Arrays.stream(samples).max().orElse(1.0);\r\n        for (int i = 0; i < samples.length; i++) {\r\n            samples[i] = samples[i] / max; // Normalizacja\r\n            if (Math.abs(samples[i]) < 0.0001) samples[i] = 0; // Prosta filtracja\r\n        }\r\n        return samples;\r\n    }\r\n\r\n\r\n\r\n\r\n    // Metoda do przetwarzania nagranego dźwięku\r\n    private static double[] processAudio(AudioInputStream audioInputStream, int numCoefficients, int sampleRate) {\r\n        double[] mfcc = new double[0];\r\n\r\n        try {\r\n            FastFourierTransformer transformer = new FastFourierTransformer(DftNormalization.STANDARD);\r\n\r\n            byte[] buffer = new byte[4096];\r\n            ByteArrayOutputStream out = new ByteArrayOutputStream();\r\n            int bytesRead;\r\n            while ((bytesRead = audioInputStream.read(buffer)) != -1) {\r\n                out.write(buffer, 0, bytesRead);\r\n            }\r\n\r\n            byte[] audioData = out.toByteArray();\r\n            double[] samples = convertBytesToDoubleSamples(audioData); // Konwersja bajtów na próbki\r\n\r\n            samples = trimSilenceFromEdges(samples, 0.02);\r\n            samples = Arrays.copyOf(samples, nextPowerOfTwo(samples.length));\r\n\r\n            Complex[] fftResult = transformer.transform(samples, TransformType.FORWARD);\r\n            mfcc = calculateMFCC(fftResult, sampleRate, numCoefficients);\r\n\r\n            System.out.println(\"Nagranie: \" + Arrays.toString(mfcc));\r\n\r\n        } catch (IOException | IllegalArgumentException ex) {\r\n            ex.printStackTrace();\r\n        }\r\n\r\n        return mfcc;\r\n    }\r\n\r\n    private static int nextPowerOfTwo(int number) {\r\n        int result = 1;\r\n        while (result < number) {\r\n            result <<= 1; // Podwaja wartość result\r\n        }\r\n        return result;\r\n    }\r\n\r\n\r\n    private static double[] trimSilenceFromEdges(double[] samples, double threshold) {\r\n        int startIndex = 0;\r\n        int endIndex = samples.length - 1;\r\n\r\n        for (int i = 0; i < samples.length; i++) {\r\n            if (Math.abs(samples[i]) > threshold) {\r\n                startIndex = i;\r\n                break;\r\n            }\r\n        }\r\n\r\n        for (int i = samples.length - 1; i >= 0; i--) {\r\n            if (Math.abs(samples[i]) > threshold) {\r\n                endIndex = i;\r\n                break;\r\n            }\r\n        }\r\n\r\n        return Arrays.copyOfRange(samples, startIndex, endIndex + 1);\r\n    }\r\n\r\n\r\n    // Metoda do obliczania MFCC (Mel-Frequency Cepstral Coefficients)\r\n    private static double[] calculateMFCC(Complex[] fftResult, int sampleRate, int numCoefficients) {\r\n        final int NUM_MEL_FILTERS = 40; // Liczba filtrów melowskich\r\n        final int NUM_CEPSTRAL_COEFFICIENTS = numCoefficients; // Liczba współczynników cepstralnych\r\n        double[] mfcc = new double[NUM_CEPSTRAL_COEFFICIENTS];\r\n\r\n        // Obliczanie mocy spektrum\r\n        double[] powerSpectrum = new double[fftResult.length / 2];\r\n        for (int i = 0; i < fftResult.length / 2; i++) {\r\n            powerSpectrum[i] = Math.pow(fftResult[i].abs(), 2);\r\n        }\r\n\r\n        // Obliczanie filtrów melowskich\r\n        double[][] melFilters = createMelFilters(sampleRate, fftResult.length / 2, NUM_MEL_FILTERS);\r\n\r\n        // Filtracja pasmowa melowska\r\n        double[] melEnergies = new double[NUM_MEL_FILTERS];\r\n        for (int i = 0; i < NUM_MEL_FILTERS; i++) {\r\n            for (int j = 0; j < powerSpectrum.length; j++) {\r\n                melEnergies[i] += melFilters[i][j] * powerSpectrum[j];\r\n            }\r\n        }\r\n\r\n        // Obliczanie logarytmu energii\r\n        for (int i = 0; i < NUM_MEL_FILTERS; i++) {\r\n            melEnergies[i] = Math.log(melEnergies[i]);\r\n        }\r\n\r\n        // Wykonanie dyskretnej transformaty kosinusowej (DCT)\r\n        for (int i = 0; i < NUM_CEPSTRAL_COEFFICIENTS; i++) {\r\n            double sum = 0;\r\n            for (int j = 0; j < NUM_MEL_FILTERS; j++) {\r\n                sum += melEnergies[j] * Math.cos(Math.PI * i / NUM_MEL_FILTERS * (j + 0.5));\r\n            }\r\n            mfcc[i] = sum;\r\n        }\r\n\r\n        return mfcc;\r\n    }\r\n\r\n    // Metoda do tworzenia filtrów melowskich\r\n    private static double[][] createMelFilters(int sampleRate, int fftSize, int numFilters) {\r\n        final double fMin = 0; // Minimalna częstotliwość\r\n        final double fMax = sampleRate / 2; // Maksymalna częstotliwość\r\n        final double melMin = 2595 * Math.log10(1 + fMin / 700); // Minimalna częstotliwość melowska\r\n        final double melMax = 2595 * Math.log10(1 + fMax / 700); // Maksymalna częstotliwość melowska\r\n        double[] melPoints = new double[numFilters + 2];\r\n        for (int i = 0; i < melPoints.length; i++) {\r\n            melPoints[i] = melMin + (melMax - melMin) / (numFilters + 1) * i;\r\n        }\r\n        double[][] filters = new double[numFilters][fftSize];\r\n        for (int i = 1; i <= numFilters; i++) {\r\n            for (int j = 0; j < fftSize; j++) {\r\n                double f = j * sampleRate / fftSize;\r\n                if (f < fMin || f > fMax) {\r\n                    filters[i - 1][j] = 0;\r\n                } else {\r\n                    double mel = 2595 * Math.log10(1 + f / 700);\r\n                    if (mel <= melPoints[i - 1]) {\r\n                        filters[i - 1][j] = 0;\r\n                    } else if (mel < melPoints[i]) {\r\n                        filters[i - 1][j] = (mel - melPoints[i - 1]) / (melPoints[i] - melPoints[i - 1]);\r\n                    } else if (mel < melPoints[i + 1]) {\r\n                        filters[i - 1][j] = (melPoints[i + 1] - mel) / (melPoints[i + 1] - melPoints[i]);\r\n                    } else {\r\n                        filters[i - 1][j] = 0;\r\n                    }\r\n                }\r\n            }\r\n        }\r\n        return filters;\r\n    }\r\n\r\n    private static MultiLayerNetwork loadModel(File modelFile) {\r\n        MultiLayerNetwork model = null;\r\n        try {\r\n            model = MultiLayerNetwork.load(modelFile, true);\r\n        } catch (IOException e) {\r\n            e.printStackTrace();\r\n        }\r\n        return model;\r\n    }\r\n\r\n    private static double[] oneHotEncode(int index, int size) {\r\n        if (index < 0 || index >= size) {\r\n            throw new IllegalArgumentException(\"Index out of bounds: \" + index);\r\n        }\r\n        double[] oneHotEncoded = new double[size];\r\n        oneHotEncoded[index] = 1.0;\r\n        return oneHotEncoded;\r\n    }\r\n\r\n\r\n    private static void evaluateModel(MultiLayerNetwork model, List<String> words, List<List<double[]>> mfccSamplesList) {\r\n        Evaluation eval = new Evaluation(words.size());  // Inicjalizacja obiektu oceny z liczbą klas/słów\r\n\r\n        for (int wordIndex = 0; wordIndex < words.size(); wordIndex++) {\r\n            List<double[]> mfccSamples = mfccSamplesList.get(wordIndex);\r\n\r\n            for (double[] mfcc : mfccSamples) {\r\n                INDArray input = Nd4j.create(mfcc, new int[]{1, mfcc.length});  // Tworzenie NDArray dla danych wejściowych\r\n                INDArray output = model.output(input);  // Pobranie predykcji modelu\r\n\r\n                INDArray labels = Nd4j.create(oneHotEncode(wordIndex, words.size()), new int[]{1, words.size()});  // Tworzenie NDArray dla etykiet\r\n                eval.eval(labels, output);  // Ocena predykcji\r\n            }\r\n        }\r\n\r\n        System.out.println(eval.stats());  // Wyświetlanie statystyk oceny\r\n    }\r\n\r\n\r\n\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main/java/com/example/basics/SpeechRecognition.java b/src/main/java/com/example/basics/SpeechRecognition.java
+--- a/src/main/java/com/example/basics/SpeechRecognition.java	(revision f719296d7dcd1c64627edc9e7d78e8dcd8eaaf77)
++++ b/src/main/java/com/example/basics/SpeechRecognition.java	(date 1716046360681)
+@@ -1,5 +1,12 @@
+ package com.example.basics;
+ 
++import org.vosk.Recognizer;
++import org.vosk.Model;
++import org.vosk.LibVosk;
++import java.nio.ByteBuffer;
++import java.nio.ByteOrder;
++
++
+ import org.apache.commons.math3.complex.Complex;
+ import org.apache.commons.math3.transform.DftNormalization;
+ import org.apache.commons.math3.transform.FastFourierTransformer;
+@@ -55,7 +62,7 @@
+                 trainAndSaveModel();
+             }
+ 
+-            //recognizeWordsFromAudio();
++            recognizeWordsFromAudio();
+         } catch (Exception e) {
+             System.err.println("An error occurred: " + e.getMessage());
+             e.printStackTrace();
+@@ -68,6 +75,149 @@
+         return response.equalsIgnoreCase("t");
+     }
+ 
++
++
++    private static void recognizeWordsFromAudio() throws Exception {
++        Terminal terminal = TerminalBuilder.terminal();
++        LineReader reader = LineReaderBuilder.builder().terminal(terminal).build();
++
++        System.out.println("Naciśnij Enter, aby rozpocząć nagrywanie, naciśnij Enter ponownie, aby zakończyć nagrywanie.");
++
++        ByteArrayOutputStream currentRecording = new ByteArrayOutputStream();
++        AudioFormat format = new AudioFormat(SAMPLE_RATE, 16, 1, true, true);
++        TargetDataLine line = (TargetDataLine) AudioSystem.getLine(new DataLine.Info(TargetDataLine.class, format));
++        line.open(format);
++        line.start();
++
++        AtomicBoolean isRecording = new AtomicBoolean(false);
++
++        Thread recordingThread = new Thread(() -> {
++            byte[] buffer = new byte[BUFFER_SIZE];
++            int numBytesRead;
++            while (!Thread.currentThread().isInterrupted() && isRecording.get()) {
++                numBytesRead = line.read(buffer, 0, buffer.length);
++                if (numBytesRead > 0) {
++                    currentRecording.write(buffer, 0, numBytesRead);
++                }
++            }
++        });
++
++        // Rozpocznij nagrywanie
++        reader.readLine();
++        isRecording.set(true);
++        recordingThread.start();
++        System.out.println("Rozpoczęto nagrywanie. Naciśnij Enter, aby zakończyć.");
++
++        // Zakończ nagrywanie
++        reader.readLine();
++        isRecording.set(false);
++        recordingThread.interrupt();
++        recordingThread.join(); // Czekaj na zakończenie wątku nagrywającego
++        line.close();
++
++        byte[] audioData = currentRecording.toByteArray();
++        AudioInputStream audioInputStream = new AudioInputStream(new ByteArrayInputStream(audioData), format, audioData.length / 2);
++        List<double[]> wordFeaturesList = processAudioWithVAD(audioInputStream);
++
++        // Przetwarzanie słów
++        for (double[] mfccFeatures : wordFeaturesList) {
++            INDArray inputFeatures = Nd4j.create(mfccFeatures).reshape(1, mfccFeatures.length);
++            INDArray output = model.output(inputFeatures);
++            int predictedIndex = Nd4j.argMax(output, 1).getInt(0);
++            System.out.println("Rozpoznane słowo: " + words.get(predictedIndex));
++        }
++
++        System.out.println("Nagranie zakończone. Naciśnij Enter, aby zamknąć program.");
++        reader.readLine(); // Czekaj na Enter, aby zamknąć program
++    }
++
++
++    private static List<double[]> processAudioWithVAD(AudioInputStream audioInputStream) throws IOException {
++        byte[] buffer = new byte[BUFFER_SIZE];
++        ByteArrayOutputStream out = new ByteArrayOutputStream();
++        int bytesRead;
++        while ((bytesRead = audioInputStream.read(buffer)) != -1) {
++            out.write(buffer, 0, bytesRead);
++        }
++        byte[] audioData = out.toByteArray();
++        double[] samples = convertBytesToDoubleSamples(audioData);
++
++        // Normalizuj próbki
++        samples = filterAndNormalize(samples);
++
++        // Wykorzystaj Vosk do detekcji aktywności mowy
++        Model voskModel = new Model("path/to/your/vosk/model");
++        Recognizer recognizer = new Recognizer(voskModel, SAMPLE_RATE);
++        List<double[]> wordSegments = new ArrayList<>();
++
++        List<int[]> segments = detectSpeechSegments(samples, recognizer);
++
++        for (int[] segment : segments) {
++            int start = segment[0];
++            int end = segment[1];
++            double[] wordSamples = Arrays.copyOfRange(samples, start, end);
++            double[] mfccFeatures = processAudio(wordSamples, NUM_MFCC_COEFFICIENTS, SAMPLE_RATE);
++            wordSegments.add(mfccFeatures);
++        }
++
++        System.out.println("Liczba wydzielonych słów: " + wordSegments.size());
++        return wordSegments;
++    }
++
++
++    private static List<int[]> detectSpeechSegments(double[] samples, Recognizer recognizer) throws IOException {
++        List<int[]> segments = new ArrayList<>();
++        int frameSize = 480; // 30ms for 16kHz
++        boolean isSpeech = false;
++        int segmentStart = 0;
++
++        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
++        for (double sample : samples) {
++            short val = (short) (sample * 32767);
++            byteArrayOutputStream.write(ByteBuffer.allocate(2).order(ByteOrder.LITTLE_ENDIAN).putShort(val).array());
++        }
++        byte[] audioBytes = byteArrayOutputStream.toByteArray();
++
++        int offset = 0;
++        while (offset < audioBytes.length) {
++            int len = Math.min(BUFFER_SIZE, audioBytes.length - offset);
++            boolean isFrameSpeech = recognizer.acceptWaveForm(Arrays.copyOfRange(audioBytes, offset, offset + len), len);
++            offset += len;
++
++            if (isFrameSpeech && !isSpeech) {
++                segmentStart = offset - len;
++                isSpeech = true;
++            } else if (!isFrameSpeech && isSpeech) {
++                segments.add(new int[]{segmentStart, offset - len});
++                isSpeech = false;
++            }
++        }
++
++        if (isSpeech) {
++            segments.add(new int[]{segmentStart, audioBytes.length});
++        }
++
++        return segments;
++    }
++
++    private static double[] processAudio(double[] samples, int numCoefficients, int sampleRate) {
++        try {
++            FastFourierTransformer transformer = new FastFourierTransformer(DftNormalization.STANDARD);
++
++            samples = Arrays.copyOf(samples, nextPowerOfTwo(samples.length));
++
++            Complex[] fftResult = transformer.transform(samples, TransformType.FORWARD);
++            return calculateMFCC(fftResult, sampleRate, numCoefficients);
++
++        } catch (IllegalArgumentException ex) {
++            ex.printStackTrace();
++        }
++
++        return new double[0];
++    }
++
++
++
+     private static void loadWordsFromTrainingDataFile() {
+         File file = new File(TRAINING_DATA_FILE);
+         if (!file.exists()) {
+@@ -230,130 +380,6 @@
+         ModelSerializer.writeModel(model, file, true);
+     }
+ 
+-    public static void recognizeWordsFromAudio() throws Exception {
+-        Terminal terminal = TerminalBuilder.terminal();
+-        LineReader reader = LineReaderBuilder.builder().terminal(terminal).build();
+-
+-        System.out.println("Naciśnij Enter, aby rozpocząć nagrywanie, naciśnij Enter ponownie, aby zakończyć nagrywanie.");
+-
+-        ByteArrayOutputStream currentRecording = new ByteArrayOutputStream();
+-        AudioFormat format = new AudioFormat(SAMPLE_RATE, 16, 1, true, true);
+-        TargetDataLine line = (TargetDataLine) AudioSystem.getLine(new DataLine.Info(TargetDataLine.class, format));
+-        line.open(format);
+-        line.start();
+-
+-        AtomicBoolean isRecording = new AtomicBoolean(false);
+-
+-        Thread recordingThread = new Thread(() -> {
+-            byte[] buffer = new byte[1024];
+-            int numBytesRead;
+-            while (!Thread.currentThread().isInterrupted() && isRecording.get()) {
+-                numBytesRead = line.read(buffer, 0, buffer.length);
+-                if (numBytesRead > 0) {
+-                    currentRecording.write(buffer, 0, numBytesRead);
+-                }
+-            }
+-        });
+-
+-        // Rozpocznij nagrywanie
+-        reader.readLine();
+-        isRecording.set(true);
+-        recordingThread.start();
+-        System.out.println("Rozpoczęto nagrywanie. Naciśnij Enter, aby zakończyć.");
+-
+-        // Zakończ nagrywanie
+-        reader.readLine();
+-        isRecording.set(false);
+-        recordingThread.interrupt();
+-        recordingThread.join(); // Czekaj na zakończenie wątku nagrywającego
+-        line.close();
+-
+-        byte[] audioData = currentRecording.toByteArray();
+-        AudioInputStream audioInputStream = new AudioInputStream(new ByteArrayInputStream(audioData), format, audioData.length / 2);
+-        List<double[]> wordFeaturesList = processAudioWithVAD(audioInputStream);
+-
+-        // Przetwarzanie słów
+-        for (double[] mfccFeatures : wordFeaturesList) {
+-            float[] mfccFeaturesFloat = new float[mfccFeatures.length];
+-            for (int i = 0; i < mfccFeatures.length; i++) {
+-                mfccFeaturesFloat[i] = (float) mfccFeatures[i];
+-            }
+-            INDArray inputFeatures = Nd4j.create(mfccFeaturesFloat).reshape(1, mfccFeaturesFloat.length);
+-            INDArray output = model.output(inputFeatures);
+-            int predictedIndex = Nd4j.argMax(output, 1).getInt(0);
+-            System.out.println("Rozpoznane słowo: " + words.get(predictedIndex));
+-        }
+-
+-        System.out.println("Nagranie zakończone. Naciśnij Enter, aby zamknąć program.");
+-        reader.readLine(); // Czekaj na Enter, aby zamknąć program
+-    }
+-
+-
+-
+-
+-    private static final double SILENCE_THRESHOLD = 0.2; // Próg energii dla ciszy
+-    private static final double MIN_SILENCE_DURATION = SAMPLE_RATE * 0.3; // Czas trwania ciszy w próbkach
+-
+-    private static List<double[]> processAudioWithVAD(AudioInputStream audioInputStream) throws IOException {
+-        FastFourierTransformer fft = new FastFourierTransformer(DftNormalization.STANDARD);
+-        List<double[]> wordsFeatures = new ArrayList<>();
+-        byte[] buffer = new byte[BUFFER_SIZE];
+-        ByteArrayOutputStream out = new ByteArrayOutputStream();
+-        int bytesRead;
+-        int wordCount = 0;
+-
+-        while ((bytesRead = audioInputStream.read(buffer)) != -1) {
+-            out.write(buffer, 0, bytesRead);
+-        }
+-        byte[] audioData = out.toByteArray();
+-        double[] samples = convertBytesToDoubleSamples(audioData);
+-
+-        List<Double> tempBuffer = new ArrayList<>();
+-        boolean isSpeech = false;
+-
+-        for (double sample : samples) {
+-            double currentEnergy = sample * sample;
+-
+-            // Detekcja mowy na podstawie energii sygnału
+-            if (currentEnergy > SILENCE_THRESHOLD) {
+-                if (!isSpeech) {
+-                    // Jeśli mowa się rozpoczyna, dodaj segment do bufora
+-                    tempBuffer.add(sample);
+-                    isSpeech = true;
+-                }
+-            } else {
+-                if (isSpeech) {
+-                    // Jeśli mowa się kończy, przetwórz bufor
+-                    double[] segment = tempBuffer.stream().mapToDouble(d -> d).toArray();
+-                    segment = Arrays.copyOf(segment, nextPowerOfTwo(segment.length));
+-                    Complex[] fftResult = fft.transform(segment, TransformType.FORWARD);
+-                    double[] mfccFeatures = calculateMFCC(fftResult, SAMPLE_RATE, NUM_MFCC_COEFFICIENTS);
+-                    wordsFeatures.add(mfccFeatures);
+-                    tempBuffer.clear();
+-                    wordCount++;
+-                    isSpeech = false;
+-                }
+-            }
+-        }
+-
+-        // Obsługa ostatniego segmentu
+-        if (!tempBuffer.isEmpty()) {
+-            double[] segment = tempBuffer.stream().mapToDouble(d -> d).toArray();
+-            segment = Arrays.copyOf(segment, nextPowerOfTwo(segment.length));
+-            Complex[] fftResult = fft.transform(segment, TransformType.FORWARD);
+-            double[] mfccFeatures = calculateMFCC(fftResult, SAMPLE_RATE, NUM_MFCC_COEFFICIENTS);
+-            wordsFeatures.add(mfccFeatures);
+-            wordCount++;
+-        }
+-
+-        System.out.println("Liczba wydzielonych słów: " + wordCount);
+-        return wordsFeatures;
+-    }
+-
+-
+-
+-
+-
+ 
+     private static byte[] convertDoubleSamplesToBytes(double[] samples) {
+         byte[] byteData = new byte[samples.length * 2];  // każda próbka będzie miała 2 bajty (16-bitowe wartości)
+Index: pom.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<project xmlns=\"http://maven.apache.org/POM/4.0.0\"\r\n         xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n         xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd\">\r\n    <modelVersion>4.0.0</modelVersion>\r\n\r\n    <groupId>com.example.basics</groupId>\r\n    <artifactId>speechToTextApp</artifactId>\r\n    <version>1.0-SNAPSHOT</version>\r\n\r\n    <properties>\r\n        <maven.compiler.source>21</maven.compiler.source>\r\n        <maven.compiler.target>21</maven.compiler.target>\r\n        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>\r\n    </properties>\r\n\r\n    <dependencies>\r\n        <dependency>\r\n            <groupId>org.apache.commons</groupId>\r\n            <artifactId>commons-math3</artifactId>\r\n            <version>3.6.1</version>\r\n        </dependency>\r\n\r\n        <dependency>\r\n            <groupId>org.deeplearning4j</groupId>\r\n            <artifactId>deeplearning4j-core</artifactId>\r\n            <version>1.0.0-alpha</version>\r\n        </dependency>\r\n\r\n        <dependency>\r\n            <groupId>org.jline</groupId>\r\n            <artifactId>jline</artifactId>\r\n            <version>3.20.0</version>\r\n        </dependency>\r\n\r\n        <dependency>\r\n            <groupId>org.nd4j</groupId>\r\n            <artifactId>nd4j-native-platform</artifactId>\r\n            <version>1.0.0-alpha</version>\r\n        </dependency>\r\n\r\n        <dependency>\r\n            <groupId>org.slf4j</groupId>\r\n            <artifactId>slf4j-simple</artifactId>\r\n            <version>1.7.30</version>\r\n        </dependency>\r\n\r\n\r\n    </dependencies>\r\n\r\n</project>\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/pom.xml b/pom.xml
+--- a/pom.xml	(revision f719296d7dcd1c64627edc9e7d78e8dcd8eaaf77)
++++ b/pom.xml	(date 1716045037356)
+@@ -45,7 +45,11 @@
+             <version>1.7.30</version>
+         </dependency>
+ 
+-
++        <dependency>
++            <groupId>com.alphacephei</groupId>
++            <artifactId>vosk</artifactId>
++            <version>0.3.33</version>
++        </dependency>
+     </dependencies>
+ 
+ </project>
+Index: .idea/jarRepositories.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<project version=\"4\">\r\n  <component name=\"RemoteRepositoriesConfiguration\">\r\n    <remote-repository>\r\n      <option name=\"id\" value=\"central\" />\r\n      <option name=\"name\" value=\"Central Repository\" />\r\n      <option name=\"url\" value=\"https://repo.maven.apache.org/maven2\" />\r\n    </remote-repository>\r\n    <remote-repository>\r\n      <option name=\"id\" value=\"central\" />\r\n      <option name=\"name\" value=\"Maven Central repository\" />\r\n      <option name=\"url\" value=\"https://repo1.maven.org/maven2\" />\r\n    </remote-repository>\r\n    <remote-repository>\r\n      <option name=\"id\" value=\"jboss.community\" />\r\n      <option name=\"name\" value=\"JBoss Community repository\" />\r\n      <option name=\"url\" value=\"https://repository.jboss.org/nexus/content/repositories/public/\" />\r\n    </remote-repository>\r\n  </component>\r\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/jarRepositories.xml b/.idea/jarRepositories.xml
+--- a/.idea/jarRepositories.xml	(revision f719296d7dcd1c64627edc9e7d78e8dcd8eaaf77)
++++ b/.idea/jarRepositories.xml	(date 1716043625414)
+@@ -7,6 +7,11 @@
+       <option name="url" value="https://repo.maven.apache.org/maven2" />
+     </remote-repository>
+     <remote-repository>
++      <option name="id" value="jitpack.io" />
++      <option name="name" value="jitpack.io" />
++      <option name="url" value="https://jitpack.io" />
++    </remote-repository>
++    <remote-repository>
+       <option name="id" value="central" />
+       <option name="name" value="Maven Central repository" />
+       <option name="url" value="https://repo1.maven.org/maven2" />
+Index: .idea/misc.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<project version=\"4\">\r\n  <component name=\"ExternalStorageConfigurationManager\" enabled=\"true\" />\r\n  <component name=\"MavenProjectsManager\">\r\n    <option name=\"originalFiles\">\r\n      <list>\r\n        <option value=\"$PROJECT_DIR$/pom.xml\" />\r\n      </list>\r\n    </option>\r\n  </component>\r\n  <component name=\"ProjectRootManager\" version=\"2\" languageLevel=\"JDK_21\" default=\"true\" project-jdk-name=\"21\" project-jdk-type=\"JavaSDK\">\r\n    <output url=\"file://$PROJECT_DIR$/out\" />\r\n  </component>\r\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/misc.xml b/.idea/misc.xml
+--- a/.idea/misc.xml	(revision f719296d7dcd1c64627edc9e7d78e8dcd8eaaf77)
++++ b/.idea/misc.xml	(date 1716040846847)
+@@ -1,4 +1,3 @@
+-<?xml version="1.0" encoding="UTF-8"?>
+ <project version="4">
+   <component name="ExternalStorageConfigurationManager" enabled="true" />
+   <component name="MavenProjectsManager">
+Index: .idea/workspace.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<project version=\"4\">\r\n  <component name=\"AutoImportSettings\">\r\n    <option name=\"autoReloadType\" value=\"SELECTIVE\" />\r\n  </component>\r\n  <component name=\"ChangeListManager\">\r\n    <list default=\"true\" id=\"2b8b1008-3418-4230-a8a2-ee0b2892e14a\" name=\"Changes\" comment=\"Naprawa błędów związanych z załadowanie projektu\">\r\n      <change afterPath=\"$PROJECT_DIR$/words_list.txt\" afterDir=\"false\" />\r\n      <change beforePath=\"$PROJECT_DIR$/.idea/workspace.xml\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/.idea/workspace.xml\" afterDir=\"false\" />\r\n      <change beforePath=\"$PROJECT_DIR$/speech_model.zip\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/speech_model.zip\" afterDir=\"false\" />\r\n      <change beforePath=\"$PROJECT_DIR$/src/main/java/com/example/basics/SpeechRecognition.java\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/src/main/java/com/example/basics/SpeechRecognition.java\" afterDir=\"false\" />\r\n      <change beforePath=\"$PROJECT_DIR$/target/classes/com/example/basics/SpeechRecognition.class\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/target/classes/com/example/basics/SpeechRecognition.class\" afterDir=\"false\" />\r\n      <change beforePath=\"$PROJECT_DIR$/training_data.csv\" beforeDir=\"false\" />\r\n    </list>\r\n    <option name=\"SHOW_DIALOG\" value=\"false\" />\r\n    <option name=\"HIGHLIGHT_CONFLICTS\" value=\"true\" />\r\n    <option name=\"HIGHLIGHT_NON_ACTIVE_CHANGELIST\" value=\"false\" />\r\n    <option name=\"LAST_RESOLUTION\" value=\"IGNORE\" />\r\n  </component>\r\n  <component name=\"FileTemplateManagerImpl\">\r\n    <option name=\"RECENT_TEMPLATES\">\r\n      <list>\r\n        <option value=\"Class\" />\r\n      </list>\r\n    </option>\r\n  </component>\r\n  <component name=\"Git.Settings\">\r\n    <option name=\"RECENT_GIT_ROOT_PATH\" value=\"$PROJECT_DIR$\" />\r\n  </component>\r\n  <component name=\"MarkdownSettingsMigration\">\r\n    <option name=\"stateVersion\" value=\"1\" />\r\n  </component>\r\n  <component name=\"MavenImportPreferences\">\r\n    <option name=\"generalSettings\">\r\n      <MavenGeneralSettings>\r\n        <option name=\"usePluginRegistry\" value=\"true\" />\r\n      </MavenGeneralSettings>\r\n    </option>\r\n    <option name=\"importingSettings\">\r\n      <MavenImportingSettings>\r\n        <option name=\"jdkForImporter\" value=\"21\" />\r\n      </MavenImportingSettings>\r\n    </option>\r\n  </component>\r\n  <component name=\"MavenRunner\">\r\n    <option name=\"jreName\" value=\"21\" />\r\n  </component>\r\n  <component name=\"ProjectColorInfo\">{\r\n  &quot;associatedIndex&quot;: 1\r\n}</component>\r\n  <component name=\"ProjectId\" id=\"2dElImdSnrIiuazE0RGcgW50B6U\" />\r\n  <component name=\"ProjectLevelVcsManager\" settingsEditedManually=\"true\">\r\n    <ConfirmationsSetting value=\"2\" id=\"Add\" />\r\n  </component>\r\n  <component name=\"ProjectViewState\">\r\n    <option name=\"hideEmptyMiddlePackages\" value=\"true\" />\r\n    <option name=\"showLibraryContents\" value=\"true\" />\r\n  </component>\r\n  <component name=\"PropertiesComponent\"><![CDATA[{\r\n  \"keyToString\": {\r\n    \"RunOnceActivity.OpenProjectViewOnStart\": \"true\",\r\n    \"RunOnceActivity.ShowReadmeOnStart\": \"true\",\r\n    \"ignore.virus.scanning.warn.message\": \"true\",\r\n    \"last_opened_file_path\": \"C:/Users/Michal_Mordarski/Downloads/jahmm-0.7.0.jar\",\r\n    \"project.structure.last.edited\": \"Project\",\r\n    \"project.structure.proportion\": \"0.15\",\r\n    \"project.structure.side.proportion\": \"0.2\",\r\n    \"settings.editor.selected.configurable\": \"preferences.pluginManager\"\r\n  }\r\n}]]></component>\r\n  <component name=\"RecentsManager\">\r\n    <key name=\"MoveFile.RECENT_KEYS\">\r\n      <recent name=\"C:\\Users\\Michal_Mordarski\\IdeaProjects\\speechToTextApp\" />\r\n    </key>\r\n  </component>\r\n  <component name=\"RunManager\">\r\n    <configuration name=\"SpeechRecognition\" type=\"Application\" factoryName=\"Application\" temporary=\"true\" nameIsGenerated=\"true\">\r\n      <option name=\"MAIN_CLASS_NAME\" value=\"com.example.basics.SpeechRecognition\" />\r\n      <module name=\"speechToTextApp\" />\r\n      <extension name=\"coverage\">\r\n        <pattern>\r\n          <option name=\"PATTERN\" value=\"com.example.basics.*\" />\r\n          <option name=\"ENABLED\" value=\"true\" />\r\n        </pattern>\r\n      </extension>\r\n      <method v=\"2\">\r\n        <option name=\"Make\" enabled=\"true\" />\r\n      </method>\r\n    </configuration>\r\n    <recent_temporary>\r\n      <list>\r\n        <item itemvalue=\"Application.SpeechRecognition\" />\r\n      </list>\r\n    </recent_temporary>\r\n  </component>\r\n  <component name=\"SpellCheckerSettings\" RuntimeDictionaries=\"0\" Folders=\"0\" CustomDictionaries=\"0\" DefaultDictionary=\"application-level\" UseSingleDictionary=\"true\" transferred=\"true\" />\r\n  <component name=\"TaskManager\">\r\n    <task active=\"true\" id=\"Default\" summary=\"Default task\">\r\n      <changelist id=\"2b8b1008-3418-4230-a8a2-ee0b2892e14a\" name=\"Changes\" comment=\"\" />\r\n      <created>1709581042963</created>\r\n      <option name=\"number\" value=\"Default\" />\r\n      <option name=\"presentableId\" value=\"Default\" />\r\n      <updated>1709581042963</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00001\" summary=\"Naprawa błędów związanych z załadowanie projektu\">\r\n      <option name=\"closed\" value=\"true\" />\r\n      <created>1715174756281</created>\r\n      <option name=\"number\" value=\"00001\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00001\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1715174756281</updated>\r\n    </task>\r\n    <option name=\"localTasksCounter\" value=\"2\" />\r\n    <servers />\r\n  </component>\r\n  <component name=\"UnknownFeatures\">\r\n    <option featureType=\"dependencySupport\" implementationName=\"java:org.projectlombok:lombok\" />\r\n  </component>\r\n  <component name=\"VcsManagerConfiguration\">\r\n    <MESSAGE value=\"Naprawa błędów związanych z załadowanie projektu\" />\r\n    <option name=\"LAST_COMMIT_MESSAGE\" value=\"Naprawa błędów związanych z załadowanie projektu\" />\r\n  </component>\r\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/workspace.xml b/.idea/workspace.xml
+--- a/.idea/workspace.xml	(revision f719296d7dcd1c64627edc9e7d78e8dcd8eaaf77)
++++ b/.idea/workspace.xml	(date 1716043730830)
+@@ -4,13 +4,12 @@
+     <option name="autoReloadType" value="SELECTIVE" />
+   </component>
+   <component name="ChangeListManager">
+-    <list default="true" id="2b8b1008-3418-4230-a8a2-ee0b2892e14a" name="Changes" comment="Naprawa błędów związanych z załadowanie projektu">
+-      <change afterPath="$PROJECT_DIR$/words_list.txt" afterDir="false" />
++    <list default="true" id="2b8b1008-3418-4230-a8a2-ee0b2892e14a" name="Changes" comment="Przygotowanie kodu do zbierania danych treningowych">
++      <change beforePath="$PROJECT_DIR$/.idea/jarRepositories.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/jarRepositories.xml" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/speech_model.zip" beforeDir="false" afterPath="$PROJECT_DIR$/speech_model.zip" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+       <change beforePath="$PROJECT_DIR$/src/main/java/com/example/basics/SpeechRecognition.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/example/basics/SpeechRecognition.java" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/basics/SpeechRecognition.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/example/basics/SpeechRecognition.class" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/training_data.csv" beforeDir="false" />
+     </list>
+     <option name="SHOW_DIALOG" value="false" />
+     <option name="HIGHLIGHT_CONFLICTS" value="true" />
+@@ -56,18 +55,18 @@
+     <option name="hideEmptyMiddlePackages" value="true" />
+     <option name="showLibraryContents" value="true" />
+   </component>
+-  <component name="PropertiesComponent"><![CDATA[{
+-  "keyToString": {
+-    "RunOnceActivity.OpenProjectViewOnStart": "true",
+-    "RunOnceActivity.ShowReadmeOnStart": "true",
+-    "ignore.virus.scanning.warn.message": "true",
+-    "last_opened_file_path": "C:/Users/Michal_Mordarski/Downloads/jahmm-0.7.0.jar",
+-    "project.structure.last.edited": "Project",
+-    "project.structure.proportion": "0.15",
+-    "project.structure.side.proportion": "0.2",
+-    "settings.editor.selected.configurable": "preferences.pluginManager"
++  <component name="PropertiesComponent">{
++  &quot;keyToString&quot;: {
++    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
++    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
++    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
++    &quot;last_opened_file_path&quot;: &quot;C:/Users/Michal_Mordarski/Downloads/jahmm-0.7.0.jar&quot;,
++    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
++    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
++    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
++    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;
+   }
+-}]]></component>
++}</component>
+   <component name="RecentsManager">
+     <key name="MoveFile.RECENT_KEYS">
+       <recent name="C:\Users\Michal_Mordarski\IdeaProjects\speechToTextApp" />
+@@ -110,7 +109,15 @@
+       <option name="project" value="LOCAL" />
+       <updated>1715174756281</updated>
+     </task>
+-    <option name="localTasksCounter" value="2" />
++    <task id="LOCAL-00002" summary="Przygotowanie kodu do zbierania danych treningowych">
++      <option name="closed" value="true" />
++      <created>1715178796153</created>
++      <option name="number" value="00002" />
++      <option name="presentableId" value="LOCAL-00002" />
++      <option name="project" value="LOCAL" />
++      <updated>1715178796153</updated>
++    </task>
++    <option name="localTasksCounter" value="3" />
+     <servers />
+   </component>
+   <component name="UnknownFeatures">
+@@ -118,6 +125,7 @@
+   </component>
+   <component name="VcsManagerConfiguration">
+     <MESSAGE value="Naprawa błędów związanych z załadowanie projektu" />
+-    <option name="LAST_COMMIT_MESSAGE" value="Naprawa błędów związanych z załadowanie projektu" />
++    <MESSAGE value="Przygotowanie kodu do zbierania danych treningowych" />
++    <option name="LAST_COMMIT_MESSAGE" value="Przygotowanie kodu do zbierania danych treningowych" />
+   </component>
+ </project>
+\ No newline at end of file

@@ -1,4 +1,2 @@
-jabłko
-być 
-bar
-bank
+hi
+cześć
