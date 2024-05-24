@@ -4,11 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2b8b1008-3418-4230-a8a2-ee0b2892e14a" name="Changes" comment="Dane treningowe : duży, mały, dobry,zwierzę">
-      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_18_05_2024_17_32__Changes_.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_18_05_2024_17_32__Changes_.xml" afterDir="false" />
+    <list default="true" id="2b8b1008-3418-4230-a8a2-ee0b2892e14a" name="Changes" comment="Dane treningowe :I AM 400 PROBEK">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/example/basics/SpeechRecognition.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/example/basics/SpeechRecognition.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/example/basics/SpeechRecognition.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/example/basics/SpeechRecognition.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/training_datans.csv" beforeDir="false" afterPath="$PROJECT_DIR$/training_datans.csv" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/words_list.txt" beforeDir="false" afterPath="$PROJECT_DIR$/words_list.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -405,14 +403,29 @@
       <option name="project" value="LOCAL" />
       <updated>1715963523994</updated>
     </task>
-    <option name="localTasksCounter" value="39" />
+    <task id="LOCAL-00039" summary="Dane treningowe :I AM 400 PROBEK">
+      <option name="closed" value="true" />
+      <created>1716568891617</created>
+      <option name="number" value="00039" />
+      <option name="presentableId" value="LOCAL-00039" />
+      <option name="project" value="LOCAL" />
+      <updated>1716568891617</updated>
+    </task>
+    <task id="LOCAL-00040" summary="Dane treningowe :I AM 400 PROBEK">
+      <option name="closed" value="true" />
+      <created>1716568909828</created>
+      <option name="number" value="00040" />
+      <option name="presentableId" value="LOCAL-00040" />
+      <option name="project" value="LOCAL" />
+      <updated>1716568909828</updated>
+    </task>
+    <option name="localTasksCounter" value="41" />
     <servers />
   </component>
   <component name="UnknownFeatures">
     <option featureType="dependencySupport" implementationName="java:org.projectlombok:lombok" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Dane treningowe : who,where, when" />
     <MESSAGE value="Dane treningowe : eat,drink,sleep" />
     <MESSAGE value="Dane treningowe : walk,run,jump" />
     <MESSAGE value="Dane treningowe : sit,stand,read" />
@@ -437,6 +450,7 @@
     <MESSAGE value="Dane treningowe : smutny,zły" />
     <MESSAGE value="Dane treningowe : zmęczony,gorący, zimny,  szczęśliwy" />
     <MESSAGE value="Dane treningowe : duży, mały, dobry,zwierzę" />
-    <option name="LAST_COMMIT_MESSAGE" value="Dane treningowe : duży, mały, dobry,zwierzę" />
+    <MESSAGE value="Dane treningowe :I AM 400 PROBEK" />
+    <option name="LAST_COMMIT_MESSAGE" value="Dane treningowe :I AM 400 PROBEK" />
   </component>
 </project>
